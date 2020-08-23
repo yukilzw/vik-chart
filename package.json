@@ -1,0 +1,30 @@
+{
+  "name": "vik-chart",
+  "version": "0.0.1",
+  "description": "foolproof chart",
+  "main": "lib/index.js",
+  "scripts": {
+    "dev": "tsc -w -p tsconfig.json --target ES5 --module commonjs --outDir lib",
+    "build": "tsc -p tsconfig.json --target ES5 --module commonjs --outDir lib",
+    "lint": "eslint ./src --ext .js,.jsx,.ts,.tsx"
+  },
+  "dependencies": {
+    "@antv/g2": "~4.0.14",
+    "@antv/g6": "~3.6.0",
+    "react": "^16.8.6"
+  },
+  "devDependencies": {
+    "@types/node": "^14.6.0",
+    "@types/react": "^16.9.46",
+    "@typescript-eslint/eslint-plugin": "^2.27.0",
+    "@typescript-eslint/parser": "^2.27.0",
+    "eslint-plugin-react": "^7.20.6",
+    "eslint": "^6.5.1",
+    "typescript": "^3.8.3"
+  },
+  "keywords": [
+    "antv"
+  ],
+  "author": "yukilzw",
+  "license": "ISC"
+}

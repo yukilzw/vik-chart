@@ -25,6 +25,9 @@
   "keywords": [
     "antv"
   ],
+  "files": [
+    "lib"
+  ],
   "author": "yukilzw",
   "license": "ISC"
 }

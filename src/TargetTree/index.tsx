@@ -1,8 +1,8 @@
 /**
- * @fileOverview 拆解树图
+ * @fileOverview 指标事件拆解树图
  * @author zhanwei.lzw@alibaba-inc.com
  */
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
 import G6, { TreeGraph } from '@antv/g6';
 import { ModeOption } from '@antv/g6/lib/types';
 import { TargetTreeProps } from './types';
@@ -19,7 +19,7 @@ interface TargetTreePos {
 
 let graph: TreeGraph;
 
-const TargetTree: React.FC<TargetTreeProps> = ({
+const TargetTree: React.FC<TargetTreeProps> = forwardRef(({
   data,
   target,
   btn = [],
@@ -28,7 +28,7 @@ const TargetTree: React.FC<TargetTreeProps> = ({
   edgeKey,
   onCanvasClick = () => null,
   onMoreClick
-}) => {
+}, ref) => {
   const chooseNode = useRef();
 
   const init = useCallback(() => {
@@ -120,7 +120,7 @@ const TargetTree: React.FC<TargetTreeProps> = ({
             y: 15 - 20
           };
 
-          target.forEach(({ label, valueKey }) => {
+          target.forEach(({ label, valueKey,valueColorKey }) => {
             pos = {
               x: 110,
               y: pos.y + 20,
@@ -139,7 +139,7 @@ const TargetTree: React.FC<TargetTreeProps> = ({
               attrs: {
                 ...valueBase,
                 text: cfg[valueKey],
-                fill: cfg[`${valueKey}-color`] || 'rgba(0, 0, 0, .65)',
+                fill: cfg[valueColorKey] || 'rgba(0, 0, 0, .65)',
                 ...pos,
               },
               name: `text-${label}`,
@@ -223,7 +223,6 @@ const TargetTree: React.FC<TargetTreeProps> = ({
                 textAlign: 'center',
                 textBaseline: 'top',
                 fontWeight: 'bold',
-                cursor: 'pointer',
                 text: cfg[bottom.textKey],
                 x: 100,
                 y: h + 11,
@@ -450,10 +449,19 @@ const TargetTree: React.FC<TargetTreeProps> = ({
     }
   }, [data]);
 
+  useImperativeHandle(ref, () => ({
+    fitView: () => {
+      if (graph && graph.changeSize) {
+        const ele: HTMLElement = document.querySelector('#treeCanvas');
+        graph.changeSize(ele.offsetWidth, ele.offsetHeight);
+      }
+    },
+  }), []);
+
   return <div id="treeCanvas" style={{
     width: '100%',
     height: '100%'
   }} />;
-};
+});
 
 export default TargetTree;

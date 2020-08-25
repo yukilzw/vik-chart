@@ -25,6 +25,8 @@ interface TargetDisplay {
   label: string;
   // 指标value
   valueKey: string;
+  // 指标value颜色
+  valueColorKey: string;
 }
 
 interface BtnDisplay {

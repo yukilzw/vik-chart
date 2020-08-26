@@ -270,7 +270,7 @@
         // 禁止将 undefined 作为标识符
         "no-undefined": 0,
         // 禁止出现未使用过的变量
-        "no-unused-vars": [1, {
+        "no-unused-vars": [0, {
             "vars": "all",
             "args": "none"
         }],

@@ -1,7 +1,7 @@
 {
   "name": "vik-chart",
   "version": "0.0.1",
-  "description": "foolproof chart",
+  "description": "Complex interactive chart(graph) Library",
   "main": "lib/index.js",
   "scripts": {
     "dev": "tsc -w -p tsconfig.json --target ES5 --module commonjs --outDir lib",
@@ -9,8 +9,8 @@
     "lint": "eslint ./src --ext .js,.jsx,.ts,.tsx"
   },
   "dependencies": {
-    "@antv/g2": "~4.0.14",
-    "@antv/g6": "~3.6.0",
+    "@antv/g2": "^4.0.14",
+    "@antv/g6": "^3.6.0",
     "react": "^16.8.6"
   },
   "devDependencies": {
@@ -29,5 +29,8 @@
     "lib"
   ],
   "author": "yukilzw",
-  "license": "ISC"
+  "license": "ISC",
+  "publishConfig": {
+    "registry": "https://registry.npm.alibaba-inc.com"
+  }
 }

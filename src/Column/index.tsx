@@ -1,5 +1,5 @@
 /**
- * @fileOverview 可变坐标折线图
+ * @fileOverview 圈选多柱状图
  * @author zhanwei.lzw@alibaba-inc.com
  */
 import React, { useEffect, useCallback, forwardRef } from 'react';
@@ -10,7 +10,7 @@ import { LineProps } from './types';
 let chart: Chart;
 
 const titleStyle: ShapeAttrs = {
-  fontSize: 16,
+  fontSize: 14,
   textAlign: 'center',
   fill: '#666',
   fontWeight: 'bold'
@@ -34,7 +34,7 @@ const extraY = {
   },
 };
 
-const Line: React.FC<LineProps> = forwardRef(({
+const Column: React.FC<LineProps> = forwardRef(({
   data,
   typeKey,
   xKey,
@@ -42,8 +42,7 @@ const Line: React.FC<LineProps> = forwardRef(({
   xTitle,
   yTitle,
   xFormat,
-  yFormat,
-  padding: appendPadding
+  yFormat
 }, ref) => {
   const init = useCallback(() => {
     const ele: HTMLElement = document.querySelector('#lineCanvas');
@@ -52,8 +51,6 @@ const Line: React.FC<LineProps> = forwardRef(({
       container: 'lineCanvas',
       autoFit: true,
       height: ele.offsetHeight,
-      appendPadding,
-      // padding: [14, 33, 70, 80]
     });
 
     chart.data(data);
@@ -70,7 +67,8 @@ const Line: React.FC<LineProps> = forwardRef(({
     });
 
     chart.tooltip({
-      showCrosshairs: true,
+      showMarkers: false,
+      showCrosshairs: false,
       shared: true,
     });
 
@@ -93,19 +91,21 @@ const Line: React.FC<LineProps> = forwardRef(({
       },
     });
 
-    const g1: Geometry = chart
-      .line()
-      .position(`${xKey}*${yKey}`)
-      .shape('smooth');
+    chart.interaction('brush');
+    chart.interaction('active-region');
 
-    const g2: Geometry = chart
-      .point()
-      .position(`${xKey}*${yKey}`)
-      .shape('circle');
+    const g: Geometry = chart
+      .interval()
+      .position(`${xKey}*${yKey}`);
 
     if (typeKey) {
-      g1.color(typeKey);
-      g2.color(typeKey);
+      g.color(typeKey)
+        .adjust([
+          {
+            type: 'dodge',
+            marginRatio: 0,
+          },
+        ]);
     }
 
     chart.render();
@@ -133,6 +133,12 @@ const Line: React.FC<LineProps> = forwardRef(({
         ...extraY
       });
 
+      chart.axis(xKey, {
+        title: {
+          style: titleStyle
+        },
+      });
+
       chart.changeData(data);
     }
   }, [xKey, yKey, xTitle, yTitle, data]);
@@ -149,4 +155,4 @@ const Line: React.FC<LineProps> = forwardRef(({
   }} />;
 });
 
-export default Line;
+export default Column;

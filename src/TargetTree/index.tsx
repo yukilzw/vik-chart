@@ -120,7 +120,7 @@ const TargetTree: React.FC<TargetTreeProps> = forwardRef(({
             y: 15 - 20
           };
 
-          target.forEach(({ label, valueKey,valueColorKey }) => {
+          target.forEach(({ label, valueKey, valueColorKey }) => {
             pos = {
               x: 110,
               y: pos.y + 20,
@@ -453,6 +453,7 @@ const TargetTree: React.FC<TargetTreeProps> = forwardRef(({
     fitView: () => {
       if (graph && graph.changeSize) {
         const ele: HTMLElement = document.querySelector('#treeCanvas');
+
         graph.changeSize(ele.offsetWidth, ele.offsetHeight);
       }
     },

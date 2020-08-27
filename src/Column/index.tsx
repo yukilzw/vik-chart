@@ -2,12 +2,10 @@
  * @fileOverview 圈选多柱状图
  * @author zhanwei.lzw@alibaba-inc.com
  */
-import React, { useEffect, useCallback, forwardRef } from 'react';
+import React, { useEffect, useCallback, forwardRef, useRef, useImperativeHandle } from 'react';
 import { Chart, Geometry } from '@antv/g2';
 import { ShapeAttrs } from '@antv/g2/lib/dependents';
 import { LineProps } from './types';
-
-let chart: Chart;
 
 const titleStyle: ShapeAttrs = {
   fontSize: 14,
@@ -34,6 +32,15 @@ const extraY = {
   },
 };
 
+const extraX = {
+  line: {
+    style: {
+      lineWidth: 0.8,
+      stroke: '#333'
+    }
+  },
+};
+
 const Column: React.FC<LineProps> = forwardRef(({
   data,
   typeKey,
@@ -44,16 +51,12 @@ const Column: React.FC<LineProps> = forwardRef(({
   xFormat,
   yFormat
 }, ref) => {
-  const init = useCallback(() => {
-    const ele: HTMLElement = document.querySelector('#lineCanvas');
+  const chartRef = useRef<Chart>();
+  const canvasBoxRef = useRef();
 
-    chart = new Chart({
-      container: 'lineCanvas',
-      autoFit: true,
-      height: ele.offsetHeight,
-    });
+  const updateSetting = useCallback(() => {
+    const chart =  chartRef.current;
 
-    chart.data(data);
     chart.scale({
       [yKey]: {
         formatter: yFormat,
@@ -66,30 +69,45 @@ const Column: React.FC<LineProps> = forwardRef(({
       },
     });
 
-    chart.tooltip({
-      showMarkers: false,
-      showCrosshairs: false,
-      shared: true,
-    });
-
     chart.axis(yKey, {
-      title: {
+      title: yTitle && {
         style: titleStyle
       },
       ...extraY
     });
 
     chart.axis(xKey, {
-      title: {
+      title: xTitle && {
         style: titleStyle
       },
-      line: {
-        style: {
-          lineWidth: 0.8,
-          stroke: '#333'
-        }
-      },
+      ...extraX
     });
+  }, [xKey, yKey, xTitle, yTitle, data]);
+
+  const init = useCallback(() => {
+    const ele: HTMLElement = canvasBoxRef.current;
+
+    chartRef.current = new Chart({
+      container: canvasBoxRef.current,
+      autoFit: true,
+      height: ele.offsetHeight,
+    });
+    const chart =  chartRef.current;
+
+    const view = chart.data(data);
+
+    chart.tooltip({
+      showMarkers: false,
+      showCrosshairs: false,
+      shared: true,
+    });
+
+    chart.on('interval:click', (ev) => {
+      const intervalElement = ev.target.get('element');
+      const data = intervalElement.getModel().data;
+    });
+
+    updateSetting();
 
     chart.interaction('brush');
     chart.interaction('active-region');
@@ -112,32 +130,10 @@ const Column: React.FC<LineProps> = forwardRef(({
   }, []);
 
   useEffect(() => {
+    const chart =  chartRef.current;
+
     if (chart && data) {
-      chart.scale({
-        [yKey]: {
-          formatter: yFormat,
-          // min: 0,
-          nice: true,
-          alias: yTitle,
-        },
-        [xKey]: {
-          formatter: xFormat,
-          alias: xTitle,
-        },
-      });
-
-      chart.axis(yKey, {
-        title: {
-          style: titleStyle
-        },
-        ...extraY
-      });
-
-      chart.axis(xKey, {
-        title: {
-          style: titleStyle
-        },
-      });
+      updateSetting();
 
       chart.changeData(data);
     }
@@ -149,7 +145,17 @@ const Column: React.FC<LineProps> = forwardRef(({
     }
   }, []);
 
-  return <div id="lineCanvas" style={{
+  useImperativeHandle(ref, () => ({
+    fitView: () => {
+      const chart =  chartRef.current;
+
+      if (chart && chart.forceFit) {
+        chart.forceFit();
+      }
+    },
+  }), []);
+
+  return <div ref={canvasBoxRef} style={{
     width: '100%',
     height: '100%'
   }} />;

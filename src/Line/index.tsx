@@ -2,12 +2,10 @@
  * @fileOverview 可变坐标折线图
  * @author zhanwei.lzw@alibaba-inc.com
  */
-import React, { useEffect, useCallback, forwardRef } from 'react';
+import React, { useEffect, useCallback, forwardRef, useRef, useImperativeHandle } from 'react';
 import { Chart, Geometry } from '@antv/g2';
 import { ShapeAttrs } from '@antv/g2/lib/dependents';
 import { LineProps } from './types';
-
-let chart: Chart;
 
 const titleStyle: ShapeAttrs = {
   fontSize: 16,
@@ -34,6 +32,15 @@ const extraY = {
   },
 };
 
+const extraX = {
+  line: {
+    style: {
+      lineWidth: 0.8,
+      stroke: '#333'
+    }
+  },
+};
+
 const Line: React.FC<LineProps> = forwardRef(({
   data,
   typeKey,
@@ -45,18 +52,12 @@ const Line: React.FC<LineProps> = forwardRef(({
   yFormat,
   padding: appendPadding
 }, ref) => {
-  const init = useCallback(() => {
-    const ele: HTMLElement = document.querySelector('#lineCanvas');
+  const chartRef = useRef<Chart>();
+  const canvasBoxRef = useRef();
 
-    chart = new Chart({
-      container: 'lineCanvas',
-      autoFit: true,
-      height: ele.offsetHeight,
-      appendPadding,
-      // padding: [14, 33, 70, 80]
-    });
+  const updateSetting = useCallback(() => {
+    const chart =  chartRef.current;
 
-    chart.data(data);
     chart.scale({
       [yKey]: {
         formatter: yFormat,
@@ -69,29 +70,41 @@ const Line: React.FC<LineProps> = forwardRef(({
       },
     });
 
-    chart.tooltip({
-      showCrosshairs: true,
-      shared: true,
-    });
-
     chart.axis(yKey, {
-      title: {
+      title: yTitle && {
         style: titleStyle
       },
       ...extraY
     });
 
     chart.axis(xKey, {
-      title: {
+      title: xTitle && {
         style: titleStyle
       },
-      line: {
-        style: {
-          lineWidth: 0.8,
-          stroke: '#333'
-        }
-      },
+      ...extraX
     });
+  }, [xKey, yKey, xTitle, yTitle, data]);
+
+  const init = useCallback(() => {
+    const ele: HTMLElement = canvasBoxRef.current;
+
+    chartRef.current = new Chart({
+      container: canvasBoxRef.current,
+      autoFit: true,
+      height: ele.offsetHeight,
+      appendPadding,
+      // padding: [14, 33, 70, 80]
+    });
+    const chart =  chartRef.current;
+
+    const view = chart.data(data);
+
+    chart.tooltip({
+      showCrosshairs: true,
+      shared: true,
+    });
+
+    updateSetting();
 
     const g1: Geometry = chart
       .line()
@@ -112,26 +125,10 @@ const Line: React.FC<LineProps> = forwardRef(({
   }, []);
 
   useEffect(() => {
-    if (chart && data) {
-      chart.scale({
-        [yKey]: {
-          formatter: yFormat,
-          // min: 0,
-          nice: true,
-          alias: yTitle,
-        },
-        [xKey]: {
-          formatter: xFormat,
-          alias: xTitle,
-        },
-      });
+    const chart =  chartRef.current;
 
-      chart.axis(yKey, {
-        title: {
-          style: titleStyle
-        },
-        ...extraY
-      });
+    if (chart && data) {
+      updateSetting();
 
       chart.changeData(data);
     }
@@ -143,7 +140,17 @@ const Line: React.FC<LineProps> = forwardRef(({
     }
   }, []);
 
-  return <div id="lineCanvas" style={{
+  useImperativeHandle(ref, () => ({
+    fitView: () => {
+      const chart = chartRef.current;
+
+      if (chart && chart.forceFit) {
+        chart.forceFit();
+      }
+    },
+  }), []);
+
+  return <div ref={canvasBoxRef} style={{
     width: '100%',
     height: '100%'
   }} />;

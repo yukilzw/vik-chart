@@ -17,8 +17,6 @@ interface TargetTreePos {
   y?: number;
 }
 
-let graph: TreeGraph;
-
 const TargetTree: React.FC<TargetTreeProps> = forwardRef(({
   data,
   target,
@@ -29,9 +27,13 @@ const TargetTree: React.FC<TargetTreeProps> = forwardRef(({
   onCanvasClick = () => null,
   onMoreClick
 }, ref) => {
+  const graphRef = useRef<TreeGraph>();
+  const canvasBoxRef = useRef();
   const chooseNode = useRef();
 
   const init = useCallback(() => {
+    let graph =  graphRef.current;
+
     if (graph && graph.destroy) {
       graph.destroy();
     }
@@ -243,7 +245,7 @@ const TargetTree: React.FC<TargetTreeProps> = forwardRef(({
     );
 
     const ItemHeight = getAutoItemHeight({ target, btn } as TargetTreeProps);
-    const ele: HTMLElement = document.querySelector('#treeCanvas');
+    const ele: HTMLElement = canvasBoxRef.current;
     const modeDefault: Array<ModeTypeExt|string> = [
       {
         type: 'zoom-canvas',
@@ -267,8 +269,8 @@ const TargetTree: React.FC<TargetTreeProps> = forwardRef(({
       );
     }
 
-    graph = new G6.TreeGraph({
-      container: 'treeCanvas',
+    graphRef.current = graph = new G6.TreeGraph({
+      container: canvasBoxRef.current,
       width: ele.offsetWidth,
       height: ele.offsetHeight,
       plugins: [
@@ -441,7 +443,7 @@ const TargetTree: React.FC<TargetTreeProps> = forwardRef(({
         });
       }
     });
-  }, []);
+  }, [data]);
 
   useEffect(() => {
     if (data) {
@@ -451,15 +453,17 @@ const TargetTree: React.FC<TargetTreeProps> = forwardRef(({
 
   useImperativeHandle(ref, () => ({
     fitView: () => {
+      const graph =  graphRef.current;
+
       if (graph && graph.changeSize) {
-        const ele: HTMLElement = document.querySelector('#treeCanvas');
+        const ele: HTMLElement = canvasBoxRef.current;
 
         graph.changeSize(ele.offsetWidth, ele.offsetHeight);
       }
     },
   }), []);
 
-  return <div id="treeCanvas" style={{
+  return <div ref={canvasBoxRef} style={{
     width: '100%',
     height: '100%'
   }} />;

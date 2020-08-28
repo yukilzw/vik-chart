@@ -17,4 +17,8 @@ export interface LineProps {
   yFormat?: (val: string) => string;
   // 多折线图的折线区分键
   typeKey: string;
+  // 点击柱状图
+  onClickItem?: (modal: any) => void;
+  // 开启框选
+  brush?: boolean;
 }

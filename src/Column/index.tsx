@@ -1,11 +1,13 @@
 /**
- * @fileOverview 圈选多柱状图
+ * @fileOverview 交互柱状图组
  * @author zhanwei.lzw@alibaba-inc.com
  */
 import React, { useEffect, useCallback, forwardRef, useRef, useImperativeHandle } from 'react';
 import { Chart, Geometry } from '@antv/g2';
 import { ShapeAttrs } from '@antv/g2/lib/dependents';
+import { StateOption } from '@antv/g2/lib/interface';
 import { LineProps } from './types';
+import { toDataURL } from '../utils';
 
 const titleStyle: ShapeAttrs = {
   fontSize: 14,
@@ -49,7 +51,9 @@ const Column: React.FC<LineProps> = forwardRef(({
   xTitle,
   yTitle,
   xFormat,
-  yFormat
+  yFormat,
+  onClickItem,
+  brush = true
 }, ref) => {
   const chartRef = useRef<Chart>();
   const canvasBoxRef = useRef();
@@ -102,19 +106,42 @@ const Column: React.FC<LineProps> = forwardRef(({
       shared: true,
     });
 
-    chart.on('interval:click', (ev) => {
-      const intervalElement = ev.target.get('element');
-      const data = intervalElement.getModel().data;
-    });
+    if (onClickItem) {
+      view.on('interval:mousedown', (ev) => {
+        const element = ev.target.get('element');
+
+        element.setState('orange', !element.hasState('orange'));
+        const data = element.getModel().data;
+
+        onClickItem(data);
+      });
+
+      view.on('interval:mouseover', (ev) => {
+        view.getCanvas().setCursor('pointer');
+      });
+
+      view.on('interval:mouseout', (ev) => {
+        view.getCanvas().setCursor('default');
+      });
+    }
 
     updateSetting();
 
-    chart.interaction('brush');
+    if (brush) {
+      chart.interaction('brush');
+    }
     chart.interaction('active-region');
 
     const g: Geometry = chart
       .interval()
-      .position(`${xKey}*${yKey}`);
+      .position(`${xKey}*${yKey}`)
+      .state({
+        orange: {
+          style: {
+            fill: 'orange'
+          },
+        },
+      } as StateOption);
 
     if (typeKey) {
       g.color(typeKey)
@@ -153,6 +180,7 @@ const Column: React.FC<LineProps> = forwardRef(({
         chart.forceFit();
       }
     },
+    toDataURL: () => toDataURL(chartRef.current)
   }), []);
 
   return <div ref={canvasBoxRef} style={{

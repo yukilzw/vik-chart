@@ -6,6 +6,7 @@ import React, { useEffect, useCallback, forwardRef, useRef, useImperativeHandle 
 import { Chart, Geometry } from '@antv/g2';
 import { ShapeAttrs } from '@antv/g2/lib/dependents';
 import { LineProps } from './types';
+import { toDataURL } from '../utils';
 
 const titleStyle: ShapeAttrs = {
   fontSize: 16,
@@ -148,6 +149,7 @@ const Line: React.FC<LineProps> = forwardRef(({
         chart.forceFit();
       }
     },
+    toDataURL: () => toDataURL(chartRef.current)
   }), []);
 
   return <div ref={canvasBoxRef} style={{

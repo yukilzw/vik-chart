@@ -1,12 +1,12 @@
 /**
- * @fileOverview 可变坐标折线图
+ * @fileOverview 可变坐标折线点混合图
  * @author zhanwei.lzw@alibaba-inc.com
  */
 import React, { useEffect, useCallback, forwardRef, useRef, useImperativeHandle } from 'react';
 import { Chart, Geometry } from '@antv/g2';
 import { ShapeAttrs } from '@antv/g2/lib/dependents';
 import { LineProps } from './types';
-import { toDataURL } from '../utils';
+import { toDataURL, downloadImage } from '../utils';
 
 const titleStyle: ShapeAttrs = {
   fontSize: 16,
@@ -51,6 +51,9 @@ const Line: React.FC<LineProps> = forwardRef(({
   yTitle,
   xFormat,
   yFormat,
+  onClickItem,
+  point,
+  smooth = true,
   padding: appendPadding
 }, ref) => {
   const chartRef = useRef<Chart>();
@@ -105,21 +108,45 @@ const Line: React.FC<LineProps> = forwardRef(({
       shared: true,
     });
 
+    if (onClickItem && point) {
+      view.on('point:mousedown', (ev) => {
+        const element = ev.target.get('element');
+        const data = element.getModel().data;
+
+        onClickItem(data);
+      });
+
+      view.on('point:mouseover', (ev) => {
+        view.getCanvas().setCursor('pointer');
+      });
+
+      view.on('point:mouseout', (ev) => {
+        view.getCanvas().setCursor('default');
+      });
+    }
+
     updateSetting();
 
     const g1: Geometry = chart
       .line()
-      .position(`${xKey}*${yKey}`)
-      .shape('smooth');
-
-    const g2: Geometry = chart
-      .point()
-      .position(`${xKey}*${yKey}`)
-      .shape('circle');
+      .position(`${xKey}*${yKey}`);
 
     if (typeKey) {
       g1.color(typeKey);
-      g2.color(typeKey);
+    }
+    if (smooth) {
+      g1.shape('smooth');
+    }
+
+    if (point) {
+      const g2: Geometry = chart
+        .point()
+        .position(`${xKey}*${yKey}`)
+        .shape('circle');
+
+      if (typeKey) {
+        g2.color(typeKey);
+      }
     }
 
     chart.render();
@@ -149,7 +176,8 @@ const Line: React.FC<LineProps> = forwardRef(({
         chart.forceFit();
       }
     },
-    toDataURL: () => toDataURL(chartRef.current)
+    toDataURL: () => toDataURL(chartRef.current),
+    downloadImage: (name) => downloadImage(chartRef.current, name)
   }), []);
 
   return <div ref={canvasBoxRef} style={{

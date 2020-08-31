@@ -19,4 +19,10 @@ export interface LineProps {
   typeKey: string;
   // canvas边距自定义调整
   padding: Array<number>;
+  // 是否绘制折线点
+  point: boolean;
+  // 点击折线点
+  onClickItem?: (modal: any) => void;
+  // 是否生成平滑曲线
+  smooth: boolean;
 }

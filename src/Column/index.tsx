@@ -7,7 +7,8 @@ import { Chart, Geometry } from '@antv/g2';
 import { ShapeAttrs } from '@antv/g2/lib/dependents';
 import { StateOption } from '@antv/g2/lib/interface';
 import { LineProps } from './types';
-import { toDataURL } from '../utils';
+import { toDataURL, downloadImage } from '../utils';
+import { autoType } from './utils';
 
 const titleStyle: ShapeAttrs = {
   fontSize: 14,
@@ -52,6 +53,7 @@ const Column: React.FC<LineProps> = forwardRef(({
   yTitle,
   xFormat,
   yFormat,
+  padding: appendPadding,
   onClickItem,
   brush = true
 }, ref) => {
@@ -60,16 +62,19 @@ const Column: React.FC<LineProps> = forwardRef(({
 
   const updateSetting = useCallback(() => {
     const chart =  chartRef.current;
+    const { typeX, typeY } = autoType(data, typeKey, xKey, yKey);
 
     chart.scale({
       [yKey]: {
         formatter: yFormat,
         nice: true,
         alias: yTitle,
+        type: typeY
       },
       [xKey]: {
         formatter: xFormat,
         alias: xTitle,
+        type: typeX
       },
     });
 
@@ -95,6 +100,7 @@ const Column: React.FC<LineProps> = forwardRef(({
       container: canvasBoxRef.current,
       autoFit: true,
       height: ele.offsetHeight,
+      appendPadding
     });
     const chart =  chartRef.current;
 
@@ -180,7 +186,8 @@ const Column: React.FC<LineProps> = forwardRef(({
         chart.forceFit();
       }
     },
-    toDataURL: () => toDataURL(chartRef.current)
+    toDataURL: () => toDataURL(chartRef.current),
+    downloadImage: (name) => downloadImage(chartRef.current, name)
   }), []);
 
   return <div ref={canvasBoxRef} style={{

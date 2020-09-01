@@ -108,23 +108,6 @@ const Line: React.FC<LineProps> = forwardRef(({
       shared: true,
     });
 
-    if (onClickItem && point) {
-      view.on('point:mousedown', (ev) => {
-        const element = ev.target.get('element');
-        const data = element.getModel().data;
-
-        onClickItem(data);
-      });
-
-      view.on('point:mouseover', (ev) => {
-        view.getCanvas().setCursor('pointer');
-      });
-
-      view.on('point:mouseout', (ev) => {
-        view.getCanvas().setCursor('default');
-      });
-    }
-
     updateSetting();
 
     const g1: Geometry = chart
@@ -150,6 +133,23 @@ const Line: React.FC<LineProps> = forwardRef(({
     }
 
     chart.render();
+
+    if (onClickItem && point) {
+      view.on('point:mousedown', (ev) => {
+        const element = ev.target.get('element');
+        const data = element.getModel().data;
+
+        onClickItem(data, true);
+      });
+
+      view.on('point:mouseover', (ev) => {
+        view.getCanvas().setCursor('pointer');
+      });
+
+      view.on('point:mouseout', (ev) => {
+        view.getCanvas().setCursor('default');
+      });
+    }
   }, []);
 
   useEffect(() => {

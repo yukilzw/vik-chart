@@ -1,7 +1,7 @@
 import { Data } from '@antv/g2/lib/interface';
 
 // 柱状图配置项
-export interface LineProps {
+export interface ColumnProps {
   data: Data;
   // x轴数据键
   xKey: string;
@@ -20,7 +20,7 @@ export interface LineProps {
   // canvas边距自定义调整
   padding: Array<number>;
   // 点击柱状图
-  onClickItem?: (modal: any) => void;
+  onClickItem?: (modal: any, type: boolean) => void;
   // 开启框选
   brush?: boolean;
 }

@@ -22,7 +22,7 @@ export interface LineProps {
   // 是否绘制折线点
   point: boolean;
   // 点击折线点
-  onClickItem?: (modal: any) => void;
+  onClickItem?: (modal: any, type: boolean) => void;
   // 是否生成平滑曲线
   smooth: boolean;
 }

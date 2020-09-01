@@ -6,7 +6,7 @@ import React, { useEffect, useCallback, forwardRef, useRef, useImperativeHandle 
 import { Chart, Geometry } from '@antv/g2';
 import { ShapeAttrs } from '@antv/g2/lib/dependents';
 import { StateOption } from '@antv/g2/lib/interface';
-import { LineProps } from './types';
+import { ColumnProps } from './types';
 import { toDataURL, downloadImage } from '../utils';
 import { autoType } from './utils';
 
@@ -44,7 +44,7 @@ const extraX = {
   },
 };
 
-const Column: React.FC<LineProps> = forwardRef(({
+const Column: React.FC<ColumnProps> = forwardRef(({
   data,
   typeKey,
   xKey,
@@ -112,25 +112,6 @@ const Column: React.FC<LineProps> = forwardRef(({
       shared: true,
     });
 
-    if (onClickItem) {
-      view.on('interval:mousedown', (ev) => {
-        const element = ev.target.get('element');
-
-        element.setState('orange', !element.hasState('orange'));
-        const data = element.getModel().data;
-
-        onClickItem(data);
-      });
-
-      view.on('interval:mouseover', (ev) => {
-        view.getCanvas().setCursor('pointer');
-      });
-
-      view.on('interval:mouseout', (ev) => {
-        view.getCanvas().setCursor('default');
-      });
-    }
-
     updateSetting();
 
     if (brush) {
@@ -160,6 +141,25 @@ const Column: React.FC<LineProps> = forwardRef(({
     }
 
     chart.render();
+
+    if (onClickItem) {
+      view.on('interval:mousedown', (ev) => {
+        const element = ev.target.get('element');
+
+        element.setState('orange', !element.hasState('orange'));
+        const data = element.getModel().data;
+
+        onClickItem(data, element.hasState('orange'));
+      });
+
+      view.on('interval:mouseover', (ev) => {
+        view.getCanvas().setCursor('pointer');
+      });
+
+      view.on('interval:mouseout', (ev) => {
+        view.getCanvas().setCursor('default');
+      });
+    }
   }, []);
 
   useEffect(() => {

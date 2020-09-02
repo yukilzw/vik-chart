@@ -15,10 +15,10 @@ export interface ColumnProps {
   xFormat?: (val: string) => string;
   // y轴字符串转换
   yFormat?: (val: string) => string;
-  // 多折线图的折线区分键
-  typeKey: string;
+  // 分组类别键
+  typeKey?: string;
   // canvas边距自定义调整
-  padding: Array<number>;
+  padding?: Array<number>;
   // 点击柱状图
   onClickItem?: (modal: any, type: boolean) => void;
   // 开启框选

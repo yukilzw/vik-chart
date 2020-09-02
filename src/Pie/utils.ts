@@ -9,14 +9,17 @@ export const percentNum = (data = [], percentKey: string) => {
 
 export const searchPercentKey = (data = [], percentKey: string, typeKey: string) => {
   let autoPercentKey: string = percentKey;
-  const [testData] = data;
-  const keys = Object.keys(testData);
 
-  keys.forEach((key) => {
-    if (typeof testData[key] === 'number' && typeKey !== key) {
-      autoPercentKey = key;
-    }
-  });
+  if (!percentKey) {
+    const [testData] = data;
+    const keys = Object.keys(testData);
+
+    keys.forEach((key) => {
+      if (typeof testData[key] === 'number' && typeKey !== key) {
+        autoPercentKey = key;
+      }
+    });
+  }
   const tempObj = {};
 
   data.forEach((item) => {

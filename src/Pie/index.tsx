@@ -1,5 +1,5 @@
 /**
- * @fileOverview 交互柱状图组
+ * @fileOverview 自动聚合数据饼图
  * @author zhanwei.lzw@alibaba-inc.com
  */
 import React, { useEffect, useCallback, forwardRef, useRef, useImperativeHandle } from 'react';
@@ -8,29 +8,41 @@ import { Data } from '@antv/g2/lib/interface';
 import { PieProps } from './types';
 import { toDataURL, downloadImage } from '../utils';
 import { percentNum, searchPercentKey } from './utils';
-import { type } from 'os';
 
-const Column: React.FC<PieProps> = forwardRef(({
-  data: dataInit,
-  percentKey: percentKeyInit,
+const Pie: React.FC<PieProps> = forwardRef(({
+  data,
+  yKey,
+  xKey,
   typeKey,
-  padding: appendPadding,
+  format,
+  padding,
   onClickItem,
 }, ref) => {
   const chartRef = useRef<Chart>();
   const canvasBoxRef = useRef();
+  const state = useRef<PieProps>();
   const dataPercentSum = useRef<number>();
-  const percentKey = useRef<string>();
-  const data = useRef<Data[]>();
-  const dataOrigin = useRef<Data[]>();
-  const typeKeyOrigin = useRef<string>();
+  const dataSource = useRef<Data[]>();
   const shouldClear = useRef<boolean>(false);
+
+  useEffect(() => {
+    state.current = {
+      data,
+      yKey,
+      xKey,
+      typeKey,
+      padding,
+      format,
+      onClickItem,
+    };
+  });
 
   const updateSetting = useCallback(() => {
     const chart =  chartRef.current;
+    const { yKey } = state.current;
 
     chart.scale({
-      [percentKey.current]: {
+      [yKey]: {
         formatter: (val) => {
           val = Number(((val / dataPercentSum.current) * 100).toFixed(2)) + '%';
           return val;
@@ -41,6 +53,14 @@ const Column: React.FC<PieProps> = forwardRef(({
 
   const init = useCallback(() => {
     const ele: HTMLElement = canvasBoxRef.current;
+    const {
+      data,
+      yKey,
+      xKey,
+      typeKey,
+      padding,
+      onClickItem,
+    } = state.current;
     let firstRender = true;
 
     if (chartRef.current) {
@@ -51,12 +71,12 @@ const Column: React.FC<PieProps> = forwardRef(({
         container: canvasBoxRef.current,
         autoFit: true,
         height: ele.offsetHeight,
-        appendPadding
+        appendPadding: padding
       });
     }
     const chart =  chartRef.current;
 
-    const view = chart.data(data.current);
+    const view = chart.data(data);
 
     chart.coordinate('theta', {
       radius: 0.75,
@@ -65,6 +85,7 @@ const Column: React.FC<PieProps> = forwardRef(({
     chart.tooltip({
       showTitle: false,
       showMarkers: false,
+      itemTpl: `{dom}`
     });
 
     updateSetting();
@@ -73,10 +94,33 @@ const Column: React.FC<PieProps> = forwardRef(({
 
     chart
       .interval()
-      .position(percentKey.current)
-      .color(typeKeyOrigin.current)
-      .label(percentKey.current, {
-        content: (data) => `${data[typeKeyOrigin.current]}: ${Number(((data[percentKey.current] / dataPercentSum.current) * 100).toFixed(2))}%`
+      .position(yKey)
+      .color(typeKey)
+      .label(yKey, {
+        style: {
+          fontSize: 14
+        },
+        content: (data) => `${data[typeKey]}: ${Number(((data[yKey] / dataPercentSum.current) * 100).toFixed(2))}%`
+      })
+      .tooltip(typeKey, (type) => {
+        const res = [];
+
+        dataSource.current.forEach((item) => {
+          const percentItem = format ? format(item[yKey]) : item[yKey];
+
+          if (item[typeKey] === type) {
+            const title = xKey ? `<b style="font-weight: bold">${item[xKey]}</b>：` : '';
+
+            res.push(`<li style="margin-top: 0; margin-bottom:4px;">
+            <span style="border: 1px solid #333" class="g2-tooltip-marker"></span>
+            <span>${title}${percentItem}</span>
+            </li>`);
+          }
+        });
+
+        return {
+          dom: `<div style="padding-bottom: 8px">${res.join('<br/>')}</div>`
+        };
       })
       .adjust('stack');
 
@@ -90,8 +134,8 @@ const Column: React.FC<PieProps> = forwardRef(({
         const data = element.getModel().data;
         const selectRes = [];
 
-        dataOrigin.current.forEach((item) => {
-          if (item[typeKeyOrigin.current] === data[typeKeyOrigin.current]) {
+        dataSource.current.forEach((item) => {
+          if (item[state.current.typeKey] === data[state.current.typeKey]) {
             selectRes.push(item);
           }
         });
@@ -109,43 +153,42 @@ const Column: React.FC<PieProps> = forwardRef(({
   }, []);
 
   useEffect(() => {
-    if (dataInit) {
-      if (dataOrigin.current) {
-        const perDataKeys = Object.keys(dataOrigin.current[0]);
+    const { data } = state.current;
 
-        Object.keys(dataInit[0]).forEach((key) => {
-          if (perDataKeys.indexOf(key) === -1) {
-            shouldClear.current = true;
-          }
-        });
-      }
-      const { autoPercentKey, newData } = searchPercentKey(dataInit, percentKeyInit, typeKey);
+    if (dataSource.current) {
+      const perDataKeys = Object.keys(dataSource.current[0]);
 
-      dataPercentSum.current = percentNum(newData, autoPercentKey);
-
-      percentKey.current = autoPercentKey;
-      data.current = newData as Data[];
-      dataOrigin.current = dataInit as Data[];
-      typeKeyOrigin.current = typeKey;
+      Object.keys(data[0]).forEach((key) => {
+        if (perDataKeys.indexOf(key) === -1) {
+          shouldClear.current = true;
+        }
+      });
     }
-  }, [percentKeyInit, typeKey, dataInit]);
+  }, [typeKey]);
 
   useEffect(() => {
     const chart =  chartRef.current;
+    const { autoPercentKey, newData } = searchPercentKey(data, yKey, typeKey);
+
+    dataPercentSum.current = percentNum(newData, autoPercentKey);
+    state.current.yKey = autoPercentKey;
+    state.current.data = newData;
+    dataSource.current = data as Data[];
 
     if (chart) {
       if (!shouldClear.current) {
         updateSetting();
 
-        chart.changeData(data.current);
+        chart.changeData(newData);
       } else {
         init();
+        shouldClear.current = false;
       }
     }
-  }, [typeKey]);
+  }, [yKey, typeKey, data]);
 
   useEffect(() => {
-    if (dataInit) {
+    if (data) {
       init();
     }
   }, []);
@@ -168,4 +211,4 @@ const Column: React.FC<PieProps> = forwardRef(({
   }} />;
 });
 
-export default Column;
+export default Pie;

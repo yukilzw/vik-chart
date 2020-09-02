@@ -4,9 +4,10 @@
  */
 import React, { useEffect, useCallback, forwardRef, useRef, useImperativeHandle } from 'react';
 import { Chart, Geometry } from '@antv/g2';
+import { Data } from '@antv/g2/lib/interface';
 import { ShapeAttrs } from '@antv/g2/lib/dependents';
 import { LineProps } from './types';
-import { toDataURL, downloadImage } from '../utils';
+import { toDataURL, downloadImage, autoType } from '../utils';
 
 const titleStyle: ShapeAttrs = {
   fontSize: 16,
@@ -52,25 +53,52 @@ const Line: React.FC<LineProps> = forwardRef(({
   xFormat,
   yFormat,
   onClickItem,
-  point,
+  point = true,
+  line = true,
   smooth = true,
-  padding: appendPadding
+  padding
 }, ref) => {
   const chartRef = useRef<Chart>();
   const canvasBoxRef = useRef();
+  const state = useRef<LineProps>();
+  const dataOrigin = useRef<Data[]>();
+  const shouldClear = useRef<boolean>(false);
+
+  useEffect(() => {
+    state.current = {
+      data,
+      typeKey,
+      xKey,
+      yKey,
+      xTitle,
+      yTitle,
+      xFormat,
+      yFormat,
+      onClickItem,
+      point,
+      line,
+      smooth,
+      padding
+    };
+  });
 
   const updateSetting = useCallback(() => {
     const chart =  chartRef.current;
+    const { xKey, yKey, xTitle, yFormat, xFormat, line, yTitle } = state.current;
+    const { typeX, typeY } = autoType(data, typeKey, xKey, yKey);
 
     chart.scale({
       [yKey]: {
         formatter: yFormat,
         nice: true,
         alias: yTitle,
+        type: typeY
       },
       [xKey]: {
         formatter: xFormat,
+        nice: !line,
         alias: xTitle,
+        type: typeX
       },
     });
 
@@ -87,18 +115,35 @@ const Line: React.FC<LineProps> = forwardRef(({
       },
       ...extraX
     });
-  }, [xKey, yKey, xTitle, yTitle, data]);
+  }, []);
 
   const init = useCallback(() => {
     const ele: HTMLElement = canvasBoxRef.current;
+    const {
+      data,
+      typeKey,
+      xKey,
+      yKey,
+      onClickItem,
+      point,
+      line,
+      smooth,
+      padding
+    } = state.current;
+    let firstRender = true;
 
-    chartRef.current = new Chart({
-      container: canvasBoxRef.current,
-      autoFit: true,
-      height: ele.offsetHeight,
-      appendPadding,
-      // padding: [14, 33, 70, 80]
-    });
+    if (chartRef.current) {
+      chartRef.current.clear();
+      firstRender = false;
+    } else {
+      chartRef.current = new Chart({
+        container: canvasBoxRef.current,
+        autoFit: true,
+        height: ele.offsetHeight,
+        appendPadding: padding,
+        // padding: [14, 33, 70, 80]
+      });
+    }
     const chart =  chartRef.current;
 
     const view = chart.data(data);
@@ -106,19 +151,24 @@ const Line: React.FC<LineProps> = forwardRef(({
     chart.tooltip({
       showCrosshairs: true,
       shared: true,
+      crosshairs: {
+        type: !line ? 'xy' : 'x',
+      },
     });
 
     updateSetting();
 
-    const g1: Geometry = chart
-      .line()
-      .position(`${xKey}*${yKey}`);
+    if (line) {
+      const g1: Geometry = chart
+        .line()
+        .position(`${xKey}*${yKey}`);
 
-    if (typeKey) {
-      g1.color(typeKey);
-    }
-    if (smooth) {
-      g1.shape('smooth');
+      if (typeKey) {
+        g1.color(typeKey);
+      }
+      if (smooth) {
+        g1.shape('smooth');
+      }
     }
 
     if (point) {
@@ -134,7 +184,7 @@ const Line: React.FC<LineProps> = forwardRef(({
 
     chart.render();
 
-    if (onClickItem && point) {
+    if (onClickItem && firstRender && point) {
       view.on('point:mousedown', (ev) => {
         const element = ev.target.get('element');
         const data = element.getModel().data;
@@ -153,14 +203,33 @@ const Line: React.FC<LineProps> = forwardRef(({
   }, []);
 
   useEffect(() => {
+    const { data } = state.current;
+
+    if (dataOrigin.current) {
+      const perDataKeys = Object.keys(dataOrigin.current[0]);
+
+      Object.keys(data[0]).forEach((key) => {
+        if (perDataKeys.indexOf(key) === -1) {
+          shouldClear.current = true;
+        }
+      });
+    }
+  }, [typeKey]);
+
+  useEffect(() => {
     const chart =  chartRef.current;
 
     if (chart && data) {
-      updateSetting();
+      if (!shouldClear.current) {
+        updateSetting();
 
-      chart.changeData(data);
+        chart.changeData(data);
+      } else {
+        init();
+        shouldClear.current = false;
+      }
     }
-  }, [xKey, yKey, xTitle, yTitle, data]);
+  }, [xKey, yKey, xTitle, yTitle, yFormat, xFormat, typeKey, data]);
 
   useEffect(() => {
     if (data) {

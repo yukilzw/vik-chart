@@ -1,17 +1,16 @@
 /**
- * @fileOverview 交互柱状图组
+ * @fileOverview 三维气泡点图
  * @author zhanwei.lzw@alibaba-inc.com
  */
 import React, { useEffect, useCallback, forwardRef, useRef, useImperativeHandle } from 'react';
 import { Chart, Geometry } from '@antv/g2';
 import { Data } from '@antv/g2/lib/interface';
 import { ShapeAttrs } from '@antv/g2/lib/dependents';
-import { StateOption } from '@antv/g2/lib/interface';
-import { ColumnProps } from './types';
-import { toDataURL, downloadImage, autoType } from '../utils';
+import { BubbleProps } from './types';
+import { toDataURL, downloadImage } from '../utils';
 
 const titleStyle: ShapeAttrs = {
-  fontSize: 14,
+  fontSize: 16,
   textAlign: 'center',
   fill: '#666',
   fontWeight: 'bold'
@@ -44,22 +43,23 @@ const extraX = {
   },
 };
 
-const Column: React.FC<ColumnProps> = forwardRef(({
+const Bubble: React.FC<BubbleProps> = forwardRef(({
   data,
   typeKey,
   xKey,
   yKey,
+  zKey,
   xTitle,
   yTitle,
+  zFormat,
   xFormat,
   yFormat,
-  padding,
   onClickItem,
-  brush = true
+  padding
 }, ref) => {
   const chartRef = useRef<Chart>();
   const canvasBoxRef = useRef();
-  const state = useRef<ColumnProps>();
+  const state = useRef<BubbleProps>();
   const dataOrigin = useRef<Data[]>();
   const shouldClear = useRef<boolean>(false);
 
@@ -69,32 +69,33 @@ const Column: React.FC<ColumnProps> = forwardRef(({
       typeKey,
       xKey,
       yKey,
+      zKey,
       xTitle,
       yTitle,
       xFormat,
       yFormat,
-      padding,
+      zFormat,
       onClickItem,
-      brush
+      padding
     };
   });
 
   const updateSetting = useCallback(() => {
     const chart =  chartRef.current;
-    const { xKey, yKey, xTitle, yTitle, yFormat, xFormat, data, typeKey } = state.current;
-    const { typeX, typeY } = autoType(data, typeKey, xKey, yKey);
+    const { xKey, yKey, zKey, xTitle, yFormat, xFormat, zFormat, yTitle } = state.current;
 
     chart.scale({
       [yKey]: {
         formatter: yFormat,
         nice: true,
         alias: yTitle,
-        type: typeY
       },
       [xKey]: {
         formatter: xFormat,
         alias: xTitle,
-        type: typeX
+      },
+      [zKey]: {
+        formatter: zFormat,
       },
     });
 
@@ -120,9 +121,8 @@ const Column: React.FC<ColumnProps> = forwardRef(({
       typeKey,
       xKey,
       yKey,
-      padding,
       onClickItem,
-      brush
+      padding
     } = state.current;
     let firstRender = true;
 
@@ -141,57 +141,59 @@ const Column: React.FC<ColumnProps> = forwardRef(({
 
     const view = chart.data(data);
 
-    chart.tooltip({
-      showMarkers: false,
-      showCrosshairs: false,
-      shared: true,
-    });
+    if (zKey) {
+      chart.tooltip({
+        showTitle: false,
+        showMarkers: false,
+      });
+      chart.interaction('element-active');
+    } else {
+      chart.tooltip({
+        showTitle: false,
+        showCrosshairs: true,
+        crosshairs: {
+          type: 'xy',
+        },
+      });
+    }
 
     updateSetting();
 
-    if (brush) {
-      chart.interaction('brush');
-    }
-    chart.interaction('active-region');
-
     const g: Geometry = chart
-      .interval()
+      .point()
       .position(`${xKey}*${yKey}`)
-      .state({
-        orange: {
-          style: {
-            fill: 'orange'
-          },
-        },
-      } as StateOption);
+      .shape('circle');
 
     if (typeKey) {
-      g.color(typeKey)
-        .adjust([
-          {
-            type: 'dodge',
-            marginRatio: 0,
-          },
-        ]);
+      g.color(typeKey);
+    }
+
+    if (zKey) {
+      g.size(zKey, [4, 30])
+        .tooltip(`${typeKey}*${xKey}*${yKey}*${zKey}`)
+        .style('continent', (val) => ({
+          lineWidth: 1,
+          strokeOpacity: 1,
+          fillOpacity: 0.6,
+          stroke: '#999'
+        }));
     }
 
     chart.render();
 
     if (onClickItem && firstRender) {
-      view.on('interval:mousedown', (ev) => {
+      view.on('point:mousedown', (ev) => {
         const element = ev.target.get('element');
-
-        element.setState('active', !element.hasState('active'));
         const data = element.getModel().data;
 
-        onClickItem(data, element.hasState('active'));
+        onClickItem(data, true);
       });
 
-      view.on('interval:mouseover', (ev) => {
+      view.on('point:mouseover', (ev) => {
         view.getCanvas().setCursor('pointer');
       });
 
-      view.on('interval:mouseout', (ev) => {
+      view.on('point:mouseout', (ev) => {
         view.getCanvas().setCursor('default');
       });
     }
@@ -234,7 +236,7 @@ const Column: React.FC<ColumnProps> = forwardRef(({
 
   useImperativeHandle(ref, () => ({
     fitView: () => {
-      const chart =  chartRef.current;
+      const chart = chartRef.current;
 
       if (chart && chart.forceFit) {
         chart.forceFit();
@@ -250,4 +252,4 @@ const Column: React.FC<ColumnProps> = forwardRef(({
   }} />;
 });
 
-export default Column;
+export default Bubble;

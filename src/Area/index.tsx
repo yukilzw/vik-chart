@@ -1,17 +1,16 @@
 /**
- * @fileOverview 交互柱状图组
+ * @fileOverview 堆叠面积图
  * @author zhanwei.lzw@alibaba-inc.com
  */
 import React, { useEffect, useCallback, forwardRef, useRef, useImperativeHandle } from 'react';
 import { Chart, Geometry } from '@antv/g2';
 import { Data } from '@antv/g2/lib/interface';
 import { ShapeAttrs } from '@antv/g2/lib/dependents';
-import { StateOption } from '@antv/g2/lib/interface';
-import { ColumnProps } from './types';
+import { AreaProps } from './types';
 import { toDataURL, downloadImage, autoType } from '../utils';
 
 const titleStyle: ShapeAttrs = {
-  fontSize: 14,
+  fontSize: 16,
   textAlign: 'center',
   fill: '#666',
   fontWeight: 'bold'
@@ -44,7 +43,7 @@ const extraX = {
   },
 };
 
-const Column: React.FC<ColumnProps> = forwardRef(({
+const Area: React.FC<AreaProps> = forwardRef(({
   data,
   typeKey,
   xKey,
@@ -53,13 +52,12 @@ const Column: React.FC<ColumnProps> = forwardRef(({
   yTitle,
   xFormat,
   yFormat,
-  padding,
   onClickItem,
-  brush = true
+  padding
 }, ref) => {
   const chartRef = useRef<Chart>();
   const canvasBoxRef = useRef();
-  const state = useRef<ColumnProps>();
+  const state = useRef<AreaProps>();
   const dataOrigin = useRef<Data[]>();
   const shouldClear = useRef<boolean>(false);
 
@@ -73,15 +71,14 @@ const Column: React.FC<ColumnProps> = forwardRef(({
       yTitle,
       xFormat,
       yFormat,
-      padding,
       onClickItem,
-      brush
+      padding
     };
   });
 
   const updateSetting = useCallback(() => {
     const chart =  chartRef.current;
-    const { xKey, yKey, xTitle, yTitle, yFormat, xFormat, data, typeKey } = state.current;
+    const { xKey, yKey, xTitle, yFormat, xFormat, yTitle } = state.current;
     const { typeX, typeY } = autoType(data, typeKey, xKey, yKey);
 
     chart.scale({
@@ -120,9 +117,8 @@ const Column: React.FC<ColumnProps> = forwardRef(({
       typeKey,
       xKey,
       yKey,
-      padding,
       onClickItem,
-      brush
+      padding
     } = state.current;
     let firstRender = true;
 
@@ -142,56 +138,44 @@ const Column: React.FC<ColumnProps> = forwardRef(({
     const view = chart.data(data);
 
     chart.tooltip({
-      showMarkers: false,
-      showCrosshairs: false,
+      showCrosshairs: true,
       shared: true,
     });
 
     updateSetting();
 
-    if (brush) {
-      chart.interaction('brush');
-    }
-    chart.interaction('active-region');
+    chart.interaction('element-highlight');
 
-    const g: Geometry = chart
-      .interval()
-      .position(`${xKey}*${yKey}`)
-      .state({
-        orange: {
-          style: {
-            fill: 'orange'
-          },
-        },
-      } as StateOption);
+    const g1: Geometry = chart
+      .area()
+      .adjust('stack')
+      .position(`${xKey}*${yKey}`);
+
+    const g2: Geometry = chart
+      .line()
+      .adjust('stack')
+      .position(`${xKey}*${yKey}`);
 
     if (typeKey) {
-      g.color(typeKey)
-        .adjust([
-          {
-            type: 'dodge',
-            marginRatio: 0,
-          },
-        ]);
+      g1.color(typeKey);
+      g2.color(typeKey);
     }
 
     chart.render();
 
     if (onClickItem && firstRender) {
-      view.on('interval:mousedown', (ev) => {
+      view.on('area:mousedown', (ev) => {
         const element = ev.target.get('element');
-
-        element.setState('active', !element.hasState('active'));
         const data = element.getModel().data;
 
-        onClickItem(data, element.hasState('active'));
+        onClickItem(data, true);
       });
 
-      view.on('interval:mouseover', (ev) => {
+      view.on('area:mouseover', (ev) => {
         view.getCanvas().setCursor('pointer');
       });
 
-      view.on('interval:mouseout', (ev) => {
+      view.on('area:mouseout', (ev) => {
         view.getCanvas().setCursor('default');
       });
     }
@@ -234,7 +218,7 @@ const Column: React.FC<ColumnProps> = forwardRef(({
 
   useImperativeHandle(ref, () => ({
     fitView: () => {
-      const chart =  chartRef.current;
+      const chart = chartRef.current;
 
       if (chart && chart.forceFit) {
         chart.forceFit();
@@ -250,4 +234,4 @@ const Column: React.FC<ColumnProps> = forwardRef(({
   }} />;
 });
 
-export default Column;
+export default Area;

@@ -11,6 +11,8 @@ export interface PieProps {
   typeKey: string;
   // 字符串转换
   format?: (val: string) => string;
+  // 饼块类型
+  formatType?: (val: string) => string;
   // canvas边距自定义调整
   padding?: Array<number>;
   // 点击柱状图

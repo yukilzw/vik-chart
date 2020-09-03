@@ -7,7 +7,7 @@ export const percentNum = (data = [], percentKey: string) => {
   return num;
 };
 
-export const searchPercentKey = (data = [], percentKey: string, typeKey: string) => {
+export const searchPercentKey = (data = [], percentKey: string, typeKey: string, formatType) => {
   let autoPercentKey: string = percentKey;
 
   if (!percentKey) {

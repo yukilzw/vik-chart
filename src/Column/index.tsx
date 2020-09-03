@@ -55,13 +55,25 @@ const Column: React.FC<ColumnProps> = forwardRef(({
   yFormat,
   padding,
   onClickItem,
-  brush = true
+  brush = true,
+  afterrender
 }, ref) => {
   const chartRef = useRef<Chart>();
   const canvasBoxRef = useRef();
   const state = useRef<ColumnProps>();
   const dataOrigin = useRef<Data[]>();
   const shouldClear = useRef<boolean>(false);
+  const outputTools = useRef({
+    fitView: () => {
+      const chart =  chartRef.current;
+
+      if (chart && chart.forceFit) {
+        chart.forceFit();
+      }
+    },
+    toDataURL: () => toDataURL(chartRef.current),
+    downloadImage: (name) => downloadImage(chartRef.current, name)
+  });
 
   useEffect(() => {
     state.current = {
@@ -75,7 +87,8 @@ const Column: React.FC<ColumnProps> = forwardRef(({
       yFormat,
       padding,
       onClickItem,
-      brush
+      brush,
+      afterrender
     };
   });
 
@@ -122,7 +135,8 @@ const Column: React.FC<ColumnProps> = forwardRef(({
       yKey,
       padding,
       onClickItem,
-      brush
+      brush,
+      afterrender
     } = state.current;
     let firstRender = true;
 
@@ -173,6 +187,12 @@ const Column: React.FC<ColumnProps> = forwardRef(({
             marginRatio: 0,
           },
         ]);
+    }
+
+    if (afterrender) {
+      chart.on('afterrender', () => {
+        afterrender(outputTools.current);
+      });
     }
 
     chart.render();
@@ -232,17 +252,7 @@ const Column: React.FC<ColumnProps> = forwardRef(({
     }
   }, []);
 
-  useImperativeHandle(ref, () => ({
-    fitView: () => {
-      const chart =  chartRef.current;
-
-      if (chart && chart.forceFit) {
-        chart.forceFit();
-      }
-    },
-    toDataURL: () => toDataURL(chartRef.current),
-    downloadImage: (name) => downloadImage(chartRef.current, name)
-  }), []);
+  useImperativeHandle(ref, () => (outputTools.current), []);
 
   return <div ref={canvasBoxRef} style={{
     width: '100%',

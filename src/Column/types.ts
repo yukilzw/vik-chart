@@ -23,4 +23,6 @@ export interface ColumnProps {
   onClickItem?: (modal: any, type: boolean) => void;
   // 开启框选
   brush?: boolean;
+  // 绘制完后
+  afterrender?: (outputTools: Object) => any;
 }

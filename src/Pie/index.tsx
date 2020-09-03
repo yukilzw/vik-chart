@@ -15,6 +15,7 @@ const Pie: React.FC<PieProps> = forwardRef(({
   xKey,
   typeKey,
   format,
+  formatType,
   padding,
   onClickItem,
 }, ref) => {
@@ -33,6 +34,7 @@ const Pie: React.FC<PieProps> = forwardRef(({
       typeKey,
       padding,
       format,
+      formatType,
       onClickItem,
     };
   });
@@ -49,6 +51,12 @@ const Pie: React.FC<PieProps> = forwardRef(({
         },
       },
     });
+
+    if (formatType) {
+      chart.scale(typeKey, {
+        formatter: formatType,
+      });
+    }
   }, []);
 
   const init = useCallback(() => {
@@ -100,7 +108,7 @@ const Pie: React.FC<PieProps> = forwardRef(({
         style: {
           fontSize: 14
         },
-        content: (data) => `${data[typeKey]}: ${Number(((data[yKey] / dataPercentSum.current) * 100).toFixed(2))}%`
+        content: (data) => `${formatType ? formatType(data[typeKey]) : data[typeKey]}: ${Number(((data[yKey] / dataPercentSum.current) * 100).toFixed(2))}%`
       })
       .tooltip(typeKey, (type) => {
         const res = [];
@@ -168,7 +176,7 @@ const Pie: React.FC<PieProps> = forwardRef(({
 
   useEffect(() => {
     const chart =  chartRef.current;
-    const { autoPercentKey, newData } = searchPercentKey(data, yKey, typeKey);
+    const { autoPercentKey, newData } = searchPercentKey(data, yKey, typeKey, formatType);
 
     dataPercentSum.current = percentNum(newData, autoPercentKey);
     state.current.yKey = autoPercentKey;
@@ -185,7 +193,7 @@ const Pie: React.FC<PieProps> = forwardRef(({
         shouldClear.current = false;
       }
     }
-  }, [yKey, typeKey, data]);
+  }, [yKey, typeKey, data, formatType]);
 
   useEffect(() => {
     if (data) {

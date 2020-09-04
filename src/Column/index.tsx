@@ -53,6 +53,7 @@ const Column: React.FC<ColumnProps> = forwardRef(({
   yTitle,
   xFormat,
   yFormat,
+  typeFormat,
   padding,
   onClickItem,
   brush = true,
@@ -85,6 +86,7 @@ const Column: React.FC<ColumnProps> = forwardRef(({
       yTitle,
       xFormat,
       yFormat,
+      typeFormat,
       padding,
       onClickItem,
       brush,
@@ -94,7 +96,7 @@ const Column: React.FC<ColumnProps> = forwardRef(({
 
   const updateSetting = useCallback(() => {
     const chart =  chartRef.current;
-    const { xKey, yKey, xTitle, yTitle, yFormat, xFormat, data, typeKey } = state.current;
+    const { xKey, yKey, xTitle, yTitle, yFormat, xFormat, typeFormat, data, typeKey } = state.current;
     const { typeX, typeY } = autoType(data, typeKey, xKey, yKey);
 
     chart.scale({
@@ -108,6 +110,9 @@ const Column: React.FC<ColumnProps> = forwardRef(({
         formatter: xFormat,
         alias: xTitle,
         type: typeX
+      },
+      [typeKey]: {
+        formatter: typeFormat,
       },
     });
 

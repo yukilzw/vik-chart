@@ -52,6 +52,7 @@ const Line: React.FC<LineProps> = forwardRef(({
   yTitle,
   xFormat,
   yFormat,
+  typeFormat,
   onClickItem,
   point = true,
   line = true,
@@ -74,6 +75,7 @@ const Line: React.FC<LineProps> = forwardRef(({
       yTitle,
       xFormat,
       yFormat,
+      typeFormat,
       onClickItem,
       point,
       line,
@@ -84,7 +86,7 @@ const Line: React.FC<LineProps> = forwardRef(({
 
   const updateSetting = useCallback(() => {
     const chart =  chartRef.current;
-    const { xKey, yKey, xTitle, yFormat, xFormat, line, yTitle } = state.current;
+    const { xKey, yKey, xTitle, yFormat, xFormat, typeFormat, line, yTitle } = state.current;
     const { typeX, typeY } = autoType(data, typeKey, xKey, yKey);
 
     chart.scale({
@@ -98,7 +100,10 @@ const Line: React.FC<LineProps> = forwardRef(({
         formatter: xFormat,
         nice: !line,
         alias: xTitle,
-        type: typeX
+        type: typeX,
+      },
+      [typeKey]: {
+        formatter: typeFormat,
       },
     });
 

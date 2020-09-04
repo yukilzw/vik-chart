@@ -52,6 +52,7 @@ const Area: React.FC<AreaProps> = forwardRef(({
   yTitle,
   xFormat,
   yFormat,
+  typeFormat,
   onClickItem,
   padding
 }, ref) => {
@@ -71,6 +72,7 @@ const Area: React.FC<AreaProps> = forwardRef(({
       yTitle,
       xFormat,
       yFormat,
+      typeFormat,
       onClickItem,
       padding
     };
@@ -78,7 +80,7 @@ const Area: React.FC<AreaProps> = forwardRef(({
 
   const updateSetting = useCallback(() => {
     const chart =  chartRef.current;
-    const { xKey, yKey, xTitle, yFormat, xFormat, yTitle } = state.current;
+    const { xKey, yKey, xTitle, yFormat, xFormat, typeFormat, yTitle } = state.current;
     const { typeX, typeY } = autoType(data, typeKey, xKey, yKey);
 
     chart.scale({
@@ -91,7 +93,11 @@ const Area: React.FC<AreaProps> = forwardRef(({
       [xKey]: {
         formatter: xFormat,
         alias: xTitle,
-        type: typeX
+        type: typeX,
+        range: [0, 1]
+      },
+      [typeKey]: {
+        formatter: typeFormat,
       },
     });
 

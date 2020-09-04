@@ -12,9 +12,10 @@ export interface ColumnProps {
   // y轴title
   yTitle: string;
   // x轴字符串转换
-  xFormat?: (val: string) => string;
+  xFormat?: (val: string|number) => string;
   // y轴字符串转换
-  yFormat?: (val: string) => string;
+  yFormat?: (val: string|number) => string;
+  typeFormat?: (val: string|number) => string;
   // 分组类别键
   typeKey?: string;
   // canvas边距自定义调整

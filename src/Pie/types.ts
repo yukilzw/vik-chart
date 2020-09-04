@@ -9,10 +9,12 @@ export interface PieProps {
   xKey: string;
   // 分组类别键
   typeKey: string;
+  //
+  yTitle?: string;
   // 字符串转换
-  format?: (val: string) => string;
+  format?: (val: string|number) => string;
   // 饼块类型
-  formatType?: (val: string) => string;
+  formatType?: (val: string|number) => string;
   // canvas边距自定义调整
   padding?: Array<number>;
   // 点击柱状图

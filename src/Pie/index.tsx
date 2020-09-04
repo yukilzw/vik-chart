@@ -5,15 +5,24 @@
 import React, { useEffect, useCallback, forwardRef, useRef, useImperativeHandle } from 'react';
 import { Chart } from '@antv/g2';
 import { Data } from '@antv/g2/lib/interface';
+import { ShapeAttrs } from '@antv/g2/lib/dependents';
 import { PieProps } from './types';
 import { toDataURL, downloadImage } from '../utils';
 import { percentNum, searchPercentKey } from './utils';
+
+const titleStyle: ShapeAttrs = {
+  fontSize: 16,
+  textAlign: 'center',
+  fill: '#666',
+  fontWeight: 'bold'
+};
 
 const Pie: React.FC<PieProps> = forwardRef(({
   data,
   yKey,
   xKey,
   typeKey,
+  yTitle,
   format,
   formatType,
   padding,
@@ -33,6 +42,7 @@ const Pie: React.FC<PieProps> = forwardRef(({
       xKey,
       typeKey,
       padding,
+      yTitle,
       format,
       formatType,
       onClickItem,
@@ -57,6 +67,7 @@ const Pie: React.FC<PieProps> = forwardRef(({
         formatter: formatType,
       });
     }
+
   }, []);
 
   const init = useCallback(() => {
@@ -65,6 +76,7 @@ const Pie: React.FC<PieProps> = forwardRef(({
       data,
       yKey,
       xKey,
+      yTitle,
       typeKey,
       padding,
       onClickItem,
@@ -88,6 +100,7 @@ const Pie: React.FC<PieProps> = forwardRef(({
 
     chart.coordinate('theta', {
       radius: 0.75,
+      innerRadius: 0.5,
     });
 
     chart.tooltip({
@@ -99,6 +112,29 @@ const Pie: React.FC<PieProps> = forwardRef(({
     updateSetting();
 
     chart.interaction('element-active');
+
+    chart
+      .annotation()
+      .text({
+        position: ['50%', '50%'],
+        content: yTitle,
+        style: {
+          fontSize: 16,
+          fill: '#666',
+          textAlign: 'center',
+        },
+        offsetY: -15,
+      })
+      .text({
+        position: ['50%', '50%'],
+        content: format ? format(dataPercentSum.current) : dataPercentSum.current,
+        style: {
+          fontSize: 16,
+          fill: '#666',
+          textAlign: 'center',
+        },
+        offsetY: 15,
+      });
 
     chart
       .interval()
@@ -117,7 +153,7 @@ const Pie: React.FC<PieProps> = forwardRef(({
           const percentItem = format ? format(item[yKey]) : item[yKey];
 
           if (item[typeKey] === type) {
-            const title = xKey ? `<b style="font-weight: bold">${item[xKey]}</b>：` : '';
+            const title = xKey ? `<b style="font-weight: bold">${item[xKey]}</b>：` : `<b style="font-weight: bold">${yTitle}</b>：`;
 
             res.push(`<li style="margin-top: 0; margin-bottom:4px;">
             <span style="border: 1px solid #333" class="g2-tooltip-marker"></span>

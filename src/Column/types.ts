@@ -15,6 +15,7 @@ export interface ColumnProps {
   xFormat?: (val: string|number) => string;
   // y轴字符串转换
   yFormat?: (val: string|number) => string;
+  // 图例类型转换
   typeFormat?: (val: string|number) => string;
   // 分组类别键
   typeKey?: string;

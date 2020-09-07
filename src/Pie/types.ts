@@ -9,7 +9,7 @@ export interface PieProps {
   xKey: string;
   // 分组类别键
   typeKey: string;
-  //
+  // 饼图指标类型转换
   yTitle?: string;
   // 字符串转换
   format?: (val: string|number) => string;

@@ -57,6 +57,7 @@ const Line: React.FC<LineProps> = forwardRef(({
   point = true,
   line = true,
   smooth = true,
+  legendFilter = true,
   padding
 }, ref) => {
   const chartRef = useRef<Chart>();
@@ -80,7 +81,8 @@ const Line: React.FC<LineProps> = forwardRef(({
       point,
       line,
       smooth,
-      padding
+      padding,
+      legendFilter
     };
   });
 
@@ -133,7 +135,8 @@ const Line: React.FC<LineProps> = forwardRef(({
       point,
       line,
       smooth,
-      padding
+      padding,
+      legendFilter
     } = state.current;
     let firstRender = true;
 
@@ -160,6 +163,10 @@ const Line: React.FC<LineProps> = forwardRef(({
         type: !line ? 'xy' : 'x',
       },
     });
+
+    if (!legendFilter) {
+      chart.removeInteraction('legend-filter');
+    }
 
     updateSetting();
 

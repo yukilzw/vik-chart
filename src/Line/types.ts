@@ -29,6 +29,6 @@ export interface LineProps {
   onClickItem?: (modal: any, type: boolean) => void;
   // 是否生成平滑曲线
   smooth?: boolean;
-  // 图例交互开启
-  legendFilter?: boolean;
+  // 图例位置
+  legendPos?: 'top' | 'bottom' | 'right'
 }

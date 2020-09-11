@@ -57,8 +57,8 @@ const Line: React.FC<LineProps> = forwardRef(({
   point = true,
   line = true,
   smooth = true,
-  legendFilter = true,
-  padding
+  padding,
+  legendPos
 }, ref) => {
   const chartRef = useRef<Chart>();
   const canvasBoxRef = useRef();
@@ -81,14 +81,12 @@ const Line: React.FC<LineProps> = forwardRef(({
       point,
       line,
       smooth,
-      padding,
-      legendFilter
     };
   });
 
   const updateSetting = useCallback(() => {
     const chart =  chartRef.current;
-    const { xKey, yKey, xTitle, yFormat, xFormat, typeFormat, line, yTitle } = state.current;
+    const { data, typeKey, xKey, yKey, xTitle, yFormat, xFormat, typeFormat, line, yTitle } = state.current;
     const { typeX, typeY } = autoType(data, typeKey, xKey, yKey);
 
     chart.scale({
@@ -135,8 +133,6 @@ const Line: React.FC<LineProps> = forwardRef(({
       point,
       line,
       smooth,
-      padding,
-      legendFilter
     } = state.current;
     let firstRender = true;
 
@@ -164,9 +160,9 @@ const Line: React.FC<LineProps> = forwardRef(({
       },
     });
 
-    if (!legendFilter) {
-      chart.removeInteraction('legend-filter');
-    }
+    chart.legend({
+      position: legendPos || 'bottom',
+    });
 
     updateSetting();
 
@@ -241,7 +237,7 @@ const Line: React.FC<LineProps> = forwardRef(({
         shouldClear.current = false;
       }
     }
-  }, [xKey, yKey, xTitle, yTitle, yFormat, xFormat, typeKey, data]);
+  }, [xKey, yKey, xTitle, yTitle, yFormat, xFormat, typeFormat, typeKey, data]);
 
   useEffect(() => {
     if (data) {
@@ -258,7 +254,8 @@ const Line: React.FC<LineProps> = forwardRef(({
       }
     },
     toDataURL: () => toDataURL(chartRef.current),
-    downloadImage: (name) => downloadImage(chartRef.current, name)
+    downloadImage: (name) => downloadImage(chartRef.current, name),
+    getInstance: () => chartRef.current
   }), []);
 
   return <div ref={canvasBoxRef} style={{

@@ -4,8 +4,8 @@
   "description": "Complex interactive chart(graph) Library",
   "main": "lib/index.js",
   "scripts": {
-    "dev": "tsc -w -p tsconfig.json --target ES5 --module commonjs --outDir lib",
-    "build": "tsc -p tsconfig.json --target ES5 --module commonjs --outDir lib",
+    "dev": "tsc -w -p tsconfig.json --target ES5 --module es2015 --outDir lib",
+    "build": "tsc -p tsconfig.json --target ES5 --module es2015 --outDir lib",
     "lint": "eslint ./src --ext .js,.jsx,.ts,.tsx"
   },
   "dependencies": {

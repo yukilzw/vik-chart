@@ -43,41 +43,33 @@ const extraX = {
   },
 };
 
-const Line: React.FC<LineProps> = forwardRef(({
-  data,
-  typeKey,
-  xKey,
-  yKey,
-  xTitle,
-  yTitle,
-  xFormat,
-  yFormat,
-  typeFormat,
-  onClickItem,
-  point = true,
-  line = true,
-  smooth = true,
-  padding,
-  legendPos
-}, ref) => {
+const Line: React.FC<LineProps> = forwardRef((props, ref) => {
   const chartRef = useRef<Chart>();
   const canvasBoxRef = useRef();
   const state = useRef<LineProps>();
   const dataOrigin = useRef<Data[]>();
   const shouldClear = useRef<boolean>(false);
 
+  const {
+    data,
+    typeKey,
+    xKey,
+    yKey,
+    xTitle,
+    yTitle,
+    xFormat,
+    yFormat,
+    typeFormat,
+    point = true,
+    line = true,
+    smooth = true,
+    padding,
+    legendPos
+  } = props;
+
   useEffect(() => {
     state.current = {
-      data,
-      typeKey,
-      xKey,
-      yKey,
-      xTitle,
-      yTitle,
-      xFormat,
-      yFormat,
-      typeFormat,
-      onClickItem,
+      ...props,
       point,
       line,
       smooth,

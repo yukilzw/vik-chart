@@ -56,7 +56,7 @@ const Column: React.FC<ColumnProps> = forwardRef(({
   typeFormat,
   padding,
   onClickItem,
-  brush = true,
+  brush,
   afterrender
 }, ref) => {
   const chartRef = useRef<Chart>();
@@ -172,6 +172,8 @@ const Column: React.FC<ColumnProps> = forwardRef(({
       chart.interaction('brush');
     }
     chart.interaction('active-region');
+
+    chart.coordinate('rect').transpose();
 
     const g: Geometry = chart
       .interval()

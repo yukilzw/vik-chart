@@ -166,18 +166,27 @@ const Column: React.FC<ColumnProps> = forwardRef(({
       shared: true,
     });
 
+    chart.legend(false);
+
     updateSetting();
 
     if (brush) {
       chart.interaction('brush');
     }
     chart.interaction('active-region');
+    chart.interaction('element-single-selected');
 
     chart.coordinate('rect').transpose();
 
     const g: Geometry = chart
       .interval()
       .position(`${xKey}*${yKey}`)
+      .color(yKey, (dis) => {
+        if (dis > 0) {
+          return 'rgb(207, 19, 34)';
+        }
+        return 'rgb(63, 134, 0)';
+      })
       .state({
         orange: {
           style: {
@@ -205,15 +214,6 @@ const Column: React.FC<ColumnProps> = forwardRef(({
     chart.render();
 
     if (onClickItem && firstRender) {
-      view.on('interval:mousedown', (ev) => {
-        const element = ev.target.get('element');
-
-        element.setState('active', !element.hasState('active'));
-        const data = element.getModel().data;
-
-        onClickItem(data, element.hasState('active'));
-      });
-
       view.on('interval:mouseover', (ev) => {
         view.getCanvas().setCursor('pointer');
       });
@@ -252,6 +252,24 @@ const Column: React.FC<ColumnProps> = forwardRef(({
       }
     }
   }, [xKey, yKey, xTitle, yTitle, yFormat, xFormat, typeKey, data]);
+
+  useEffect(() => {
+    const chart =  chartRef.current;
+    let event = (ev) => {
+      const element = ev.target.get('element');
+
+      const data = element.getModel().data;
+
+      onClickItem(data);
+    };
+
+    if (chart && onClickItem) {
+      chart.on('interval:click', event);
+      return () => {
+        chart.off('interval:click', event);
+      };
+    }
+  }, [onClickItem]);
 
   useEffect(() => {
     if (data) {

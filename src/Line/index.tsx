@@ -247,6 +247,7 @@ const Line: React.FC<LineProps> = forwardRef((props, ref) => {
     },
     toDataURL: () => toDataURL(chartRef.current),
     downloadImage: (name) => downloadImage(chartRef.current, name),
+    getData: () => state.current.data,
     getInstance: () => chartRef.current
   }), []);
 

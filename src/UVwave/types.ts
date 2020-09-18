@@ -23,8 +23,4 @@ export interface ColumnProps {
   padding?: Array<number>;
   /** 点击柱状图 */
   onClickItem?: (modal: any, type?: boolean) => void;
-  /** 开启框选 */
-  brush?: boolean;
-  /** 绘制完后 */
-  afterrender?: (outputTools: Object) => any;
 }

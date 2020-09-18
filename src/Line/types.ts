@@ -31,4 +31,6 @@ export interface LineProps {
   smooth?: boolean;
   /** 图例位置 */
   legendPos?: 'top' | 'bottom' | 'right'
+  /** 智能筛选展示数据 */
+  auto?: boolean
 }

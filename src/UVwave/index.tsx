@@ -20,16 +20,14 @@ const titleStyle: ShapeAttrs = {
 const extraY = {
   line: {
     style: {
-      lineWidth: 0.8,
+      lineWidth: 1,
       stroke: '#333'
     }
   },
   grid: {
     line: {
       style: {
-        lineWidth: 0.8,
-        lineDash: [5],
-        stroke: '#bfbfbf'
+        lineWidth: 0,
       }
     }
   },
@@ -38,27 +36,21 @@ const extraY = {
 const extraX = {
   line: {
     style: {
-      lineWidth: 0.8,
-      stroke: '#333'
+      lineWidth: 1,
+      stroke: '#333',
     }
   },
+  tickLine: {
+    style: {
+      lineWidth: 0,
+    }
+  }
 };
 
-const Column: React.FC<ColumnProps> = forwardRef(({
-  data,
-  typeKey,
-  xKey,
-  yKey,
-  xTitle,
-  yTitle,
-  xFormat,
-  yFormat,
-  typeFormat,
-  padding,
-  onClickItem,
-  brush,
-  afterrender
-}, ref) => {
+const greenColor = 'rgb(63, 134, 0)';
+const redColor = 'rgb(207, 19, 34)';
+
+const Column: React.FC<ColumnProps> = forwardRef((props, ref) => {
   const chartRef = useRef<Chart>();
   const canvasBoxRef = useRef();
   const state = useRef<ColumnProps>();
@@ -76,22 +68,20 @@ const Column: React.FC<ColumnProps> = forwardRef(({
     downloadImage: (name) => downloadImage(chartRef.current, name)
   });
 
+  const {
+    data,
+    typeKey,
+    xKey,
+    yKey,
+    xTitle,
+    yTitle,
+    xFormat,
+    yFormat,
+    onClickItem,
+  } = props;
+
   useEffect(() => {
-    state.current = {
-      data,
-      typeKey,
-      xKey,
-      yKey,
-      xTitle,
-      yTitle,
-      xFormat,
-      yFormat,
-      typeFormat,
-      padding,
-      onClickItem,
-      brush,
-      afterrender
-    };
+    state.current = props;
   });
 
   const updateSetting = useCallback(() => {
@@ -140,8 +130,6 @@ const Column: React.FC<ColumnProps> = forwardRef(({
       yKey,
       padding,
       onClickItem,
-      brush,
-      afterrender
     } = state.current;
     let firstRender = true;
 
@@ -166,13 +154,64 @@ const Column: React.FC<ColumnProps> = forwardRef(({
       shared: true,
     });
 
+    let annoPosKey;
+
+    data.some((item, i) => {
+      if (item[yKey] > 0 && i > 0) {
+        annoPosKey = i - 0.5;
+        return true;
+      }
+      return false;
+    });
+
+    if (annoPosKey) {
+      chart.annotation().line({
+        start: [annoPosKey, 'min'],
+        end: [annoPosKey, 0],
+        style: {
+          stroke: greenColor,
+          lineWidth: 1,
+          lineDash: [4, 3]
+        },
+        text: {
+          position: 'start',
+          style: {
+            fill: greenColor,
+            fontSize: 15,
+            fontWeight: 'normal'
+          },
+          content: '负增长 ⬇️',
+          offsetY: 22,
+          offsetX: 5
+        },
+      });
+
+      chart.annotation().line({
+        start: [annoPosKey, 0],
+        end: [annoPosKey, 'max'],
+        style: {
+          stroke: redColor,
+          lineWidth: 1,
+          lineDash: [4, 3]
+        },
+        text: {
+          position: 'end',
+          style: {
+            fill: redColor,
+            fontSize: 15,
+            fontWeight: 'normal'
+          },
+          content: '正增长 ⬆️',
+          offsetY: -5,
+          offsetX: -70
+        },
+      });
+    }
+
     chart.legend(false);
 
     updateSetting();
 
-    if (brush) {
-      chart.interaction('brush');
-    }
     chart.interaction('active-region');
     chart.interaction('element-single-selected');
 
@@ -183,9 +222,9 @@ const Column: React.FC<ColumnProps> = forwardRef(({
       .position(`${xKey}*${yKey}`)
       .color(yKey, (dis) => {
         if (dis > 0) {
-          return 'rgb(207, 19, 34)';
+          return redColor;
         }
-        return 'rgb(63, 134, 0)';
+        return greenColor;
       })
       .state({
         orange: {
@@ -203,12 +242,6 @@ const Column: React.FC<ColumnProps> = forwardRef(({
             marginRatio: 0,
           },
         ]);
-    }
-
-    if (afterrender) {
-      chart.on('afterrender', () => {
-        afterrender(outputTools.current);
-      });
     }
 
     chart.render();

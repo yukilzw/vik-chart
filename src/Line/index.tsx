@@ -7,7 +7,7 @@ import { Chart, Geometry } from '@antv/g2';
 import { Data } from '@antv/g2/lib/interface';
 import { ShapeAttrs } from '@antv/g2/lib/dependents';
 import { LineProps } from './types';
-import { toDataURL, downloadImage, autoType } from '../utils';
+import { toDataURL, downloadImage, autoType, autoFilterData } from '../utils';
 
 const titleStyle: ShapeAttrs = {
   fontSize: 16,
@@ -125,6 +125,7 @@ const Line: React.FC<LineProps> = forwardRef((props, ref) => {
       point,
       line,
       smooth,
+      auto
     } = state.current;
     let firstRender = true;
 
@@ -137,7 +138,6 @@ const Line: React.FC<LineProps> = forwardRef((props, ref) => {
         autoFit: true,
         height: ele.offsetHeight,
         appendPadding: padding,
-        // padding: [14, 33, 70, 80]
       });
     }
     const chart =  chartRef.current;
@@ -155,6 +155,12 @@ const Line: React.FC<LineProps> = forwardRef((props, ref) => {
     chart.legend({
       position: legendPos || 'bottom',
     });
+
+    if (auto) {
+      const ftype: string[] = autoFilterData(data, typeKey, yKey);
+
+      view.filter('type', (value) => ftype.indexOf(value) !== -1);
+    }
 
     updateSetting();
 

@@ -78,6 +78,9 @@ const sortTicks = (data, key) => {
   data.sort((a, b) => Number(a[key]) - Number(b[key]));
 };
 
+/**
+ * 自动识别年份时间
+ */
 export const autoType = (data, typeKey: string, xKey: string, yKey: string) => {
   let typeX;
   let typeY;
@@ -112,4 +115,56 @@ export const autoType = (data, typeKey: string, xKey: string, yKey: string) => {
     typeX,
     typeY,
   };
+};
+
+/**
+ * 智能过滤数据
+ */
+export const autoFilterData = (data, typeKey, yKey): string[] => {
+  const typeMap = {};   // 数据分组
+  const opData = data.sort((a, b) => a[yKey] - b[yKey]);  // 分组前先排序
+  let res = [];   // 最终计算出的展示类型
+
+  // 将排序后的数据归纳对象分组，这样分组下的内容也为有序，方便后面取数据范围
+  opData.forEach(item => {
+    if (!typeMap[item[typeKey]]) {
+      typeMap[item[typeKey]] = [item];
+    } else {
+      typeMap[item[typeKey]].push(item);
+    }
+  });
+
+  /**
+   * 以每一组区间范围当作固定区间，其他组来取交集，看是不是在这个区间
+   * 最终生成类型数组，在所有结果中取类型最多的一组
+   */
+  Object.keys(typeMap).forEach(type => {
+    const list = typeMap[type];
+
+    if (list[list.length - 1][yKey] === list[0][yKey]) {
+      return;
+    }
+    const temp = [type];
+
+    Object.keys(typeMap).forEach(stype => {
+      if (stype === type) {
+        return;
+      }
+      const sList = typeMap[stype];
+
+      if (
+        (sList[sList.length - 1][yKey] >= list[0][yKey]) &&
+        (sList[0][yKey] <= list[list.length - 1][yKey]) &&
+        (list[list.length - 1][yKey] !== list[0][yKey])
+      ) {
+        temp.push(stype);
+      }
+    });
+
+    if (temp.length > res.length) {
+      res = temp;
+    }
+  });
+
+  return res;
 };

@@ -156,13 +156,15 @@ const Column: React.FC<ColumnProps> = forwardRef((props, ref) => {
 
     let annoPosKey;
 
-    data.some((item, i) => {
-      if (item[yKey] > 0 && i > 0) {
-        annoPosKey = i - 0.5;
-        return true;
-      }
-      return false;
-    });
+    if (data[0][yKey] < 0) {
+      data.some((item, i) => {
+        if (item[yKey] > 0) {
+          annoPosKey = i - 0.5;
+          return true;
+        }
+        return false;
+      });
+    }
 
     if (annoPosKey) {
       chart.annotation().line({

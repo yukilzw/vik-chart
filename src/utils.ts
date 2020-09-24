@@ -118,7 +118,7 @@ export const autoType = (data, typeKey: string, xKey: string, yKey: string) => {
 };
 
 /**
- * 智能过滤数据
+ * 智能过滤算法
  */
 export const autoFilterData = (data, typeKey, yKey): string[] => {
   const typeMap = {};   // 数据分组

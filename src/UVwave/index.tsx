@@ -101,6 +101,14 @@ const Column: React.FC<ColumnProps> = forwardRef((props, ref) => {
         alias: xTitle,
         type: typeX
       },
+      ds: {
+        formatter: yFormat,
+        alias: '当日UV'
+      },
+      sub1d: {
+        formatter: yFormat,
+        alias: '环比日UV'
+      },
       [typeKey]: {
         formatter: typeFormat,
       },
@@ -221,6 +229,7 @@ const Column: React.FC<ColumnProps> = forwardRef((props, ref) => {
 
     const g: Geometry = chart
       .interval()
+      .tooltip('ds*sub1d*distance')
       .position(`${xKey}*${yKey}`)
       .color(yKey, (dis) => {
         if (dis > 0) {

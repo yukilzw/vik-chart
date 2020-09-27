@@ -147,6 +147,7 @@ const Pie: React.FC<PieProps> = forwardRef(({
         content: (data) => `${formatType ? formatType(data[typeKey]) : data[typeKey]}: ${Number(((data[yKey] / dataPercentSum.current) * 100).toFixed(2))}%`
       })
       .tooltip(typeKey, (type) => {
+        console.log(typeKey, type);
         const res = [];
 
         dataSource.current.forEach((item) => {

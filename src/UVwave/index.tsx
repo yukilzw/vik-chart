@@ -54,7 +54,6 @@ const Column: React.FC<ColumnProps> = forwardRef((props, ref) => {
   const chartRef = useRef<Chart>();
   const canvasBoxRef = useRef();
   const state = useRef<ColumnProps>();
-  const dataOrigin = useRef<Data[]>();
   const shouldClear = useRef<boolean>(false);
   const outputTools = useRef({
     fitView: () => {
@@ -107,7 +106,15 @@ const Column: React.FC<ColumnProps> = forwardRef((props, ref) => {
       },
       sub1d: {
         formatter: yFormat,
-        alias: '环比日UV'
+        alias: '环比UV'
+      },
+      todayRate: {
+        formatter: yFormat,
+        alias: '当日人群占比率'
+      },
+      yesterdayRate: {
+        formatter: yFormat,
+        alias: '环比人群占比率'
       },
       [typeKey]: {
         formatter: typeFormat,
@@ -139,19 +146,18 @@ const Column: React.FC<ColumnProps> = forwardRef((props, ref) => {
       padding,
       onClickItem,
     } = state.current;
-    let firstRender = true;
 
     if (chartRef.current) {
-      chartRef.current.clear();
-      firstRender = false;
-    } else {
-      chartRef.current = new Chart({
-        container: canvasBoxRef.current,
-        autoFit: true,
-        height: ele.offsetHeight,
-        appendPadding: padding,
-      });
+      chartRef.current.destroy();
     }
+
+    chartRef.current = new Chart({
+      container: canvasBoxRef.current,
+      autoFit: true,
+      height: ele.offsetHeight,
+      appendPadding: padding,
+    });
+
     const chart =  chartRef.current;
 
     const view = chart.data(data);
@@ -229,7 +235,7 @@ const Column: React.FC<ColumnProps> = forwardRef((props, ref) => {
 
     const g: Geometry = chart
       .interval()
-      .tooltip('ds*sub1d*distance')
+      .tooltip(yKey === 'distance' ? 'ds*sub1d*distance' : 'yesterdayRate*todayRate*diffRate')
       .position(`${xKey}*${yKey}`)
       .color(yKey, (dis) => {
         if (dis > 0) {
@@ -257,7 +263,7 @@ const Column: React.FC<ColumnProps> = forwardRef((props, ref) => {
 
     chart.render();
 
-    if (onClickItem && firstRender) {
+    if (onClickItem) {
       view.on('interval:mouseover', (ev) => {
         view.getCanvas().setCursor('pointer');
       });
@@ -269,18 +275,8 @@ const Column: React.FC<ColumnProps> = forwardRef((props, ref) => {
   }, []);
 
   useEffect(() => {
-    const { data } = state.current;
-
-    if (dataOrigin.current) {
-      const perDataKeys = Object.keys(dataOrigin.current[0]);
-
-      Object.keys(data[0]).forEach((key) => {
-        if (perDataKeys.indexOf(key) === -1) {
-          shouldClear.current = true;
-        }
-      });
-    }
-  }, [typeKey]);
+    shouldClear.current = true;
+  }, [yKey, data]);
 
   useEffect(() => {
     const chart =  chartRef.current;

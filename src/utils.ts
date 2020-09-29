@@ -120,12 +120,21 @@ export const autoType = (data, typeKey: string, xKey: string, yKey: string) => {
 /**
  * 智能过滤算法
  */
-export const autoFilterData = (data, typeKey, yKey): string[] => {
+export const autoFilterData = (source, typeKey, yKey): string[] => {
+  const data = [];  // 过滤数据存储
+
+  // 首先剔除y轴为非数字的脏数据 O(n)
+  source.forEach(item => {
+    if (typeof item[yKey] === 'number') {
+      data.push(item);
+    }
+  });
+
   const typeMap = {};   // 数据分组
-  const opData = data.sort((a, b) => a[yKey] - b[yKey]);  // 分组前先排序
+  const opData = data.sort((a, b) => a[yKey] - b[yKey]);  // 分组前先排序 O(nlogn)
   let res = [];   // 最终计算出的展示类型
 
-  // 将排序后的数据归纳对象分组，这样分组下的内容也为有序，方便后面取数据范围
+  // 将排序后的数据归纳对象分组，这样分组下的内容也为有序，方便后面取数据范围 O(n)
   opData.forEach(item => {
     if (!typeMap[item[typeKey]]) {
       typeMap[item[typeKey]] = [item];
@@ -137,9 +146,10 @@ export const autoFilterData = (data, typeKey, yKey): string[] => {
   /**
    * 以每一组区间范围当作固定区间，其他组来取交集，看是不是在这个区间
    * 最终生成类型数组，在所有结果中取类型最多的一组
+   * O(logn)
    */
   Object.keys(typeMap).forEach(type => {
-    const list = typeMap[type];
+    const list = typeMap[type]; // 检测基准标签
 
     if (list[list.length - 1][yKey] === list[0][yKey]) {
       return;
@@ -150,17 +160,22 @@ export const autoFilterData = (data, typeKey, yKey): string[] => {
       if (stype === type) {
         return;
       }
-      const sList = typeMap[stype];
+      const sList = typeMap[stype]; // 检测目标标签
 
       if (
+        // 目标区间最大值 比 基准区间最小值 大
         (sList[sList.length - 1][yKey] >= list[0][yKey]) &&
+        // 目标区间最小值 比 基准区间最小值 小
         (sList[0][yKey] <= list[list.length - 1][yKey]) &&
+        // 目标区间不为一条直线
         (list[list.length - 1][yKey] !== list[0][yKey])
       ) {
+        // 满足以上条件，可视为两条曲线有线性关联
         temp.push(stype);
       }
     });
 
+    // 如果最新解 比 原有解 能展示更多的曲线，就进行覆盖
     if (temp.length > res.length) {
       res = temp;
     }

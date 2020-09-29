@@ -2,7 +2,7 @@
  * @fileOverview 可变坐标折线点混合图
  * @author zhanwei.lzw@alibaba-inc.com
  */
-import React, { useEffect, useCallback, forwardRef, useRef, useImperativeHandle } from 'react';
+import React, { useEffect, forwardRef, useRef, useImperativeHandle } from 'react';
 import { Chart, Geometry } from '@antv/g2';
 import { Data } from '@antv/g2/lib/interface';
 import { ShapeAttrs } from '@antv/g2/lib/dependents';
@@ -43,42 +43,32 @@ const extraX = {
   },
 };
 
-const Line: React.FC<LineProps> = forwardRef((props, ref) => {
+const Line: React.FC<LineProps> = forwardRef(({
+  data,
+  typeKey,
+  xKey,
+  yKey,
+  xTitle,
+  yTitle,
+  xFormat,
+  yFormat,
+  typeFormat,
+  point = true,
+  line = true,
+  smooth = true,
+  padding,
+  legendPos,
+  onClickItem,
+  auto
+}, ref) => {
   const chartRef = useRef<Chart>();
   const canvasBoxRef = useRef();
   const state = useRef<LineProps>();
   const dataOrigin = useRef<Data[]>();
   const shouldClear = useRef<boolean>(false);
 
-  const {
-    data,
-    typeKey,
-    xKey,
-    yKey,
-    xTitle,
-    yTitle,
-    xFormat,
-    yFormat,
-    typeFormat,
-    point = true,
-    line = true,
-    smooth = true,
-    padding,
-    legendPos
-  } = props;
-
-  useEffect(() => {
-    state.current = {
-      ...props,
-      point,
-      line,
-      smooth,
-    };
-  });
-
-  const updateSetting = useCallback(() => {
+  const updateSetting = () => {
     const chart =  chartRef.current;
-    const { data, typeKey, xKey, yKey, xTitle, yFormat, xFormat, typeFormat, line, yTitle } = state.current;
     const { typeX, typeY } = autoType(data, typeKey, xKey, yKey);
 
     chart.scale({
@@ -112,21 +102,16 @@ const Line: React.FC<LineProps> = forwardRef((props, ref) => {
       },
       ...extraX
     });
-  }, []);
 
-  const init = useCallback(() => {
+    if (auto) {
+      const ftype: string[] = autoFilterData(data, typeKey, yKey);
+
+      chart.filter('type', (value) => ftype.indexOf(value) !== -1);
+    }
+  };
+
+  const init = () => {
     const ele: HTMLElement = canvasBoxRef.current;
-    const {
-      data,
-      typeKey,
-      xKey,
-      yKey,
-      onClickItem,
-      point,
-      line,
-      smooth,
-      auto
-    } = state.current;
     let firstRender = true;
 
     if (chartRef.current) {
@@ -155,12 +140,6 @@ const Line: React.FC<LineProps> = forwardRef((props, ref) => {
     chart.legend({
       position: legendPos || 'bottom',
     });
-
-    if (auto) {
-      const ftype: string[] = autoFilterData(data, typeKey, yKey);
-
-      view.filter('type', (value) => ftype.indexOf(value) !== -1);
-    }
 
     updateSetting();
 
@@ -206,11 +185,9 @@ const Line: React.FC<LineProps> = forwardRef((props, ref) => {
         view.getCanvas().setCursor('default');
       });
     }
-  }, []);
+  };
 
   useEffect(() => {
-    const { data } = state.current;
-
     if (dataOrigin.current) {
       const perDataKeys = Object.keys(dataOrigin.current[0]);
 
@@ -228,7 +205,6 @@ const Line: React.FC<LineProps> = forwardRef((props, ref) => {
     if (chart && data) {
       if (!shouldClear.current) {
         updateSetting();
-
         chart.changeData(data);
       } else {
         init();
@@ -253,7 +229,7 @@ const Line: React.FC<LineProps> = forwardRef((props, ref) => {
     },
     toDataURL: () => toDataURL(chartRef.current),
     downloadImage: (name) => downloadImage(chartRef.current, name),
-    getData: () => state.current.data,
+    getData: () => data,
     getInstance: () => chartRef.current
   }), []);
 

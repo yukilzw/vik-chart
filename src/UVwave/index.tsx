@@ -48,12 +48,13 @@ const extraX = {
 };
 
 const greenColor = 'rgb(63, 134, 0)';
-const redColor = 'rgb(207, 19, 34)';
+const greenColorOp = 'rgb(63, 134, 0, 0)';
+const redColor = 'rgba(207, 19, 34)';
+const redColorOp = 'rgba(207, 19, 34, 0)';
 
 const Column: React.FC<ColumnProps> = forwardRef((props, ref) => {
   const chartRef = useRef<Chart>();
   const canvasBoxRef = useRef();
-  const state = useRef<ColumnProps>();
   const shouldClear = useRef<boolean>(false);
   const outputTools = useRef({
     fitView: () => {
@@ -77,15 +78,12 @@ const Column: React.FC<ColumnProps> = forwardRef((props, ref) => {
     xFormat,
     yFormat,
     onClickItem,
+    padding,
+    typeFormat
   } = props;
 
-  useEffect(() => {
-    state.current = props;
-  });
-
-  const updateSetting = useCallback(() => {
+  const updateSetting = () => {
     const chart =  chartRef.current;
-    const { xKey, yKey, xTitle, yTitle, yFormat, xFormat, typeFormat, data, typeKey } = state.current;
     const { typeX, typeY } = autoType(data, typeKey, xKey, yKey);
 
     chart.scale({
@@ -134,18 +132,10 @@ const Column: React.FC<ColumnProps> = forwardRef((props, ref) => {
       },
       ...extraX
     });
-  }, []);
+  };
 
-  const init = useCallback(() => {
+  const init = () => {
     const ele: HTMLElement = canvasBoxRef.current;
-    const {
-      data,
-      typeKey,
-      xKey,
-      yKey,
-      padding,
-      onClickItem,
-    } = state.current;
 
     if (chartRef.current) {
       chartRef.current.destroy();
@@ -239,17 +229,46 @@ const Column: React.FC<ColumnProps> = forwardRef((props, ref) => {
       .position(`${xKey}*${yKey}`)
       .color(yKey, (dis) => {
         if (dis > 0) {
-          return redColor;
+          return `l(0) 0:${redColorOp} 1:${redColor}`;
         }
-        return greenColor;
+        return `l(180) 0:${greenColorOp}1:${greenColor}`;
+      })
+      .label(yKey, (val) => {
+        if (data[data.length - 1][yKey] <= 0) {
+          return {
+            position: 'left',
+            offset: -5,
+            content: (originData) => yFormat(val),
+            style: {
+              fill: val > 0 ? redColor : greenColor
+            }
+          };
+        } else if (data[0][yKey] > 0) {
+          return {
+            position: 'left',
+            offset: 50,
+            content: (originData) => yFormat(val),
+            style: {
+              fill: val > 0 ? redColor : greenColor
+            }
+          };
+        }
+        return {
+          position: 'left',
+          offset: val > 0 ? 0 : 30,
+          content: (originData) => yFormat(val),
+          style: {
+            fill: val > 0 ? redColor : greenColor
+          }
+        };
       })
       .state({
-        orange: {
+        selected: {
           style: {
-            fill: 'orange'
+            // fill: 'orange'
           },
         },
-      } as StateOption);
+      });
 
     if (typeKey) {
       g.color(typeKey)
@@ -272,7 +291,7 @@ const Column: React.FC<ColumnProps> = forwardRef((props, ref) => {
         view.getCanvas().setCursor('default');
       });
     }
-  }, []);
+  };
 
   useEffect(() => {
     shouldClear.current = true;

@@ -63,7 +63,6 @@ const Line: React.FC<LineProps> = forwardRef(({
 }, ref) => {
   const chartRef = useRef<Chart>();
   const canvasBoxRef = useRef();
-  const state = useRef<LineProps>();
   const dataOrigin = useRef<Data[]>();
   const shouldClear = useRef<boolean>(false);
 

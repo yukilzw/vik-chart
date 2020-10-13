@@ -2,7 +2,7 @@
  * @fileOverview 堆叠面积图
  * @author zhanwei.lzw@alibaba-inc.com
  */
-import React, { useEffect, useCallback, forwardRef, useRef, useImperativeHandle } from 'react';
+import React, { useEffect, forwardRef, useRef, useImperativeHandle } from 'react';
 import { Chart, Geometry } from '@antv/g2';
 import { Data } from '@antv/g2/lib/interface';
 import { ShapeAttrs } from '@antv/g2/lib/dependents';
@@ -58,29 +58,11 @@ const Area: React.FC<AreaProps> = forwardRef(({
 }, ref) => {
   const chartRef = useRef<Chart>();
   const canvasBoxRef = useRef();
-  const state = useRef<AreaProps>();
   const dataOrigin = useRef<Data[]>();
   const shouldClear = useRef<boolean>(false);
 
-  useEffect(() => {
-    state.current = {
-      data,
-      typeKey,
-      xKey,
-      yKey,
-      xTitle,
-      yTitle,
-      xFormat,
-      yFormat,
-      typeFormat,
-      onClickItem,
-      padding
-    };
-  });
-
-  const updateSetting = useCallback(() => {
+  const updateSetting = () => {
     const chart =  chartRef.current;
-    const { xKey, yKey, xTitle, yFormat, xFormat, typeFormat, yTitle } = state.current;
     const { typeX, typeY } = autoType(data, typeKey, xKey, yKey);
 
     chart.scale({
@@ -114,18 +96,10 @@ const Area: React.FC<AreaProps> = forwardRef(({
       },
       ...extraX
     });
-  }, []);
+  };
 
-  const init = useCallback(() => {
+  const init = () => {
     const ele: HTMLElement = canvasBoxRef.current;
-    const {
-      data,
-      typeKey,
-      xKey,
-      yKey,
-      onClickItem,
-      padding
-    } = state.current;
     let firstRender = true;
 
     if (chartRef.current) {
@@ -185,11 +159,9 @@ const Area: React.FC<AreaProps> = forwardRef(({
         view.getCanvas().setCursor('default');
       });
     }
-  }, []);
+  };
 
   useEffect(() => {
-    const { data } = state.current;
-
     if (dataOrigin.current) {
       const perDataKeys = Object.keys(dataOrigin.current[0]);
 

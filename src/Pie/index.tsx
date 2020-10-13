@@ -2,20 +2,13 @@
  * @fileOverview 自动聚合数据饼图
  * @author zhanwei.lzw@alibaba-inc.com
  */
-import React, { useEffect, useCallback, forwardRef, useRef, useImperativeHandle } from 'react';
+import React, { useEffect, forwardRef, useRef, useImperativeHandle } from 'react';
 import { Chart } from '@antv/g2';
 import { Data } from '@antv/g2/lib/interface';
 import { ShapeAttrs } from '@antv/g2/lib/dependents';
 import { PieProps } from './types';
 import { toDataURL, downloadImage } from '../utils';
-import { percentNum, searchPercentKey } from './utils';
-
-const titleStyle: ShapeAttrs = {
-  fontSize: 16,
-  textAlign: 'center',
-  fill: '#666',
-  fontWeight: 'bold'
-};
+import { percentNum } from './utils';
 
 const Pie: React.FC<PieProps> = forwardRef(({
   data,
@@ -30,28 +23,11 @@ const Pie: React.FC<PieProps> = forwardRef(({
 }, ref) => {
   const chartRef = useRef<Chart>();
   const canvasBoxRef = useRef();
-  const state = useRef<PieProps>();
   const dataPercentSum = useRef<number>();
-  const dataSource = useRef<Data[]>();
   const shouldClear = useRef<boolean>(false);
 
-  useEffect(() => {
-    state.current = {
-      data,
-      yKey,
-      xKey,
-      typeKey,
-      padding,
-      yTitle,
-      format,
-      formatType,
-      onClickItem,
-    };
-  });
-
-  const updateSetting = useCallback(() => {
+  const updateSetting = () => {
     const chart =  chartRef.current;
-    const { yKey } = state.current;
 
     chart.scale({
       [yKey]: {
@@ -68,19 +44,10 @@ const Pie: React.FC<PieProps> = forwardRef(({
       });
     }
 
-  }, []);
+  };
 
-  const init = useCallback(() => {
+  const init = () => {
     const ele: HTMLElement = canvasBoxRef.current;
-    const {
-      data,
-      yKey,
-      xKey,
-      yTitle,
-      typeKey,
-      padding,
-      onClickItem,
-    } = state.current;
     let firstRender = true;
 
     if (chartRef.current) {
@@ -106,7 +73,6 @@ const Pie: React.FC<PieProps> = forwardRef(({
     chart.tooltip({
       showTitle: false,
       showMarkers: false,
-      itemTpl: `{dom}`
     });
 
     updateSetting();
@@ -146,26 +112,7 @@ const Pie: React.FC<PieProps> = forwardRef(({
         },
         content: (data) => `${formatType ? formatType(data[typeKey]) : data[typeKey]}: ${Number(((data[yKey] / dataPercentSum.current) * 100).toFixed(2))}%`
       })
-      .tooltip(typeKey, (type) => {
-        const res = [];
-
-        dataSource.current.forEach((item) => {
-          const percentItem = format ? format(item[yKey]) : item[yKey];
-
-          if (item[typeKey] === type) {
-            const title = xKey ? `<b style="font-weight: bold">${item[xKey]}</b>：` : `<b style="font-weight: bold">${yTitle}</b>：`;
-
-            res.push(`<li style="margin-top: 0; margin-bottom:4px;">
-            <span style="border: 1px solid #333" class="g2-tooltip-marker"></span>
-            <span>${title}${percentItem}</span>
-            </li>`);
-          }
-        });
-
-        return {
-          dom: `<div style="padding-bottom: 8px">${res.join('<br/>')}</div>`
-        };
-      })
+      .tooltip('UV')
       .adjust('stack');
 
     chart.render();
@@ -176,14 +123,8 @@ const Pie: React.FC<PieProps> = forwardRef(({
 
         element.setState('selected', !element.hasState('selected'));
         const data = element.getModel().data;
-        const selectRes = [];
 
-        dataSource.current.forEach((item) => {
-          if (item[state.current.typeKey] === data[state.current.typeKey]) {
-            selectRes.push(item);
-          }
-        });
-        onClickItem(selectRes, element.hasState('selected'));
+        onClickItem(data, element.hasState('selected'));
       });
 
       view.on('interval:mouseover', (ev) => {
@@ -194,36 +135,18 @@ const Pie: React.FC<PieProps> = forwardRef(({
         view.getCanvas().setCursor('default');
       });
     }
-  }, []);
-
-  useEffect(() => {
-    const { data } = state.current;
-
-    if (dataSource.current) {
-      const perDataKeys = Object.keys(dataSource.current[0]);
-
-      Object.keys(data[0]).forEach((key) => {
-        if (perDataKeys.indexOf(key) === -1) {
-          shouldClear.current = true;
-        }
-      });
-    }
-  }, [typeKey]);
+  };
 
   useEffect(() => {
     const chart =  chartRef.current;
-    const { autoPercentKey, newData } = searchPercentKey(data, yKey, typeKey, formatType);
 
-    dataPercentSum.current = percentNum(newData, autoPercentKey);
-    state.current.yKey = autoPercentKey;
-    state.current.data = newData;
-    dataSource.current = data as Data[];
+    dataPercentSum.current = percentNum(data, yKey);
 
     if (chart) {
       if (!shouldClear.current) {
         updateSetting();
 
-        chart.changeData(newData);
+        chart.changeData(data);
       } else {
         init();
         shouldClear.current = false;

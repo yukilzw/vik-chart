@@ -1,5 +1,5 @@
 /**
- * @fileOverview 交互柱状图组
+ * @fileOverview 波动归因图
  * @author zhanwei.lzw@alibaba-inc.com
  */
 import React, { useEffect, useCallback, forwardRef, useRef, useImperativeHandle } from 'react';

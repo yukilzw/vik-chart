@@ -62,9 +62,9 @@ const Line: React.FC<LineProps> = forwardRef(({
   auto
 }, ref) => {
   const chartRef = useRef<Chart>();
-  const canvasBoxRef = useRef();
-  const dataOrigin = useRef<Data[]>();
+  const canvasBoxRef = useRef<HTMLDivElement>();
   const shouldClear = useRef<boolean>(false);
+  const filterData = useRef<Data>([]);
 
   const updateSetting = () => {
     const chart =  chartRef.current;
@@ -187,15 +187,18 @@ const Line: React.FC<LineProps> = forwardRef(({
   };
 
   useEffect(() => {
-    if (dataOrigin.current) {
-      const perDataKeys = Object.keys(dataOrigin.current[0]);
+    const nData = data;
 
-      Object.keys(data[0]).forEach((key) => {
-        if (perDataKeys.indexOf(key) === -1) {
-          shouldClear.current = true;
-        }
-      });
-    }
+    nData.forEach((item) => {
+      if (item[yKey] < 0.0001) {
+        item[yKey] = 0;
+      }
+    });
+    filterData.current = nData;
+  }, [data]);
+
+  useEffect(() => {
+    shouldClear.current = true;
   }, [typeKey]);
 
   useEffect(() => {

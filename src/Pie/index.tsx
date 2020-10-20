@@ -1,5 +1,5 @@
 /**
- * @fileOverview 自动聚合数据饼图
+ * @fileOverview UV聚合数据饼图
  * @author zhanwei.lzw@alibaba-inc.com
  */
 import React, { useEffect, forwardRef, useRef, useImperativeHandle } from 'react';

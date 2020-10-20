@@ -1,13 +1,13 @@
 /**
- * @fileOverview 可变坐标折线点混合图
+ * @fileOverview UV分布条形图
  * @author zhanwei.lzw@alibaba-inc.com
  */
 import React, { useEffect, forwardRef, useRef, useImperativeHandle } from 'react';
-import { Chart, Geometry } from '@antv/g2';
+import { Chart } from '@antv/g2';
 import { Data } from '@antv/g2/lib/interface';
 import { ShapeAttrs } from '@antv/g2/lib/dependents';
 import { ColumnProps } from './types';
-import { toDataURL, downloadImage, autoType, autoFilterData } from '../utils';
+import { toDataURL, downloadImage, autoType } from '../utils';
 
 const titleStyle: ShapeAttrs = {
   fontSize: 16,
@@ -55,8 +55,9 @@ const Column: React.FC<ColumnProps> = forwardRef(({
   padding,
 }, ref) => {
   const chartRef = useRef<Chart>();
-  const canvasBoxRef = useRef();
+  const canvasBoxRef = useRef<HTMLDivElement>();
   const shouldClear = useRef<boolean>(false);
+  const filterData = useRef<Data>([]);
 
   const updateSetting = () => {
     const chart =  chartRef.current;
@@ -108,7 +109,7 @@ const Column: React.FC<ColumnProps> = forwardRef(({
     }
     const chart =  chartRef.current;
 
-    const view = chart.data(data);
+    const view = chart.data(filterData.current);
 
     chart.tooltip({
       showMarkers: false,
@@ -118,8 +119,10 @@ const Column: React.FC<ColumnProps> = forwardRef(({
 
     updateSetting();
 
-    chart.interaction('slider');
+    chart.interaction('active-region');
+    chart.interaction('brush');
 
+    chart.coordinate('rect').transpose();
     chart.interval().position(`${xKey}*${yKey}`);
 
     chart.render();
@@ -143,6 +146,17 @@ const Column: React.FC<ColumnProps> = forwardRef(({
   };
 
   useEffect(() => {
+    const nData = data.sort((a, b) => a[yKey] - b[yKey]);
+
+    nData.forEach((item) => {
+      if (item[yKey] < 0.0001) {
+        item[yKey] = 0;
+      }
+    });
+    filterData.current = nData;
+  }, [data]);
+
+  useEffect(() => {
     shouldClear.current = true;
   }, [typeKey]);
 
@@ -152,7 +166,7 @@ const Column: React.FC<ColumnProps> = forwardRef(({
     if (chart && data) {
       if (!shouldClear.current) {
         updateSetting();
-        chart.changeData(data);
+        chart.changeData(filterData.current);
       } else {
         init();
         shouldClear.current = false;

@@ -52,7 +52,7 @@ const greenColorOp = 'rgb(63, 134, 0, 0)';
 const redColor = 'rgba(207, 19, 34)';
 const redColorOp = 'rgba(207, 19, 34, 0)';
 
-const Column: React.FC<ColumnProps> = forwardRef((props, ref) => {
+const UVwave: React.FC<ColumnProps> = forwardRef((props, ref) => {
   const chartRef = useRef<Chart>();
   const canvasBoxRef = useRef();
   const shouldClear = useRef<boolean>(false);
@@ -344,4 +344,4 @@ const Column: React.FC<ColumnProps> = forwardRef((props, ref) => {
   }} />;
 });
 
-export default Column;
+export default UVwave;

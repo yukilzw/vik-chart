@@ -43,7 +43,6 @@ const Pie: React.FC<PieProps> = forwardRef(({
         formatter: formatType,
       });
     }
-
   };
 
   const init = () => {
@@ -118,15 +117,6 @@ const Pie: React.FC<PieProps> = forwardRef(({
     chart.render();
 
     if (onClickItem && firstRender) {
-      view.on('interval:mousedown', (ev) => {
-        const element = ev.target.get('element');
-
-        element.setState('selected', !element.hasState('selected'));
-        const data = element.getModel().data;
-
-        onClickItem(data, element.hasState('selected'));
-      });
-
       view.on('interval:mouseover', (ev) => {
         view.getCanvas().setCursor('pointer');
       });
@@ -153,6 +143,25 @@ const Pie: React.FC<PieProps> = forwardRef(({
       }
     }
   }, [yKey, typeKey, data, formatType]);
+
+  useEffect(() => {
+    const chart =  chartRef.current;
+    let event = (ev) => {
+      const element = ev.target.get('element');
+
+      element.setState('selected', !element.hasState('selected'));
+      const data = element.getModel().data;
+
+      onClickItem(data, element.hasState('selected'));
+    };
+
+    if (chart && onClickItem) {
+      chart.on('interval:click', event);
+      return () => {
+        chart.off('interval:click', event);
+      };
+    }
+  }, [onClickItem]);
 
   useEffect(() => {
     if (data) {

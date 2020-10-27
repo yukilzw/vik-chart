@@ -120,22 +120,27 @@ export const autoType = (data, typeKey: string, xKey: string, yKey: string) => {
 /**
  * 智能过滤算法
  */
-export const autoFilterData = (source, typeKey, yKey): string[] => {
-  const data = [];  // 过滤数据存储
+export interface AutoFilterParam {
+  data: Record<string, any>[];  // 数据源
+  typeKey: string;              // 类型key
+  yKey: string;                 // 数据值key
+  max?: number;                 // 最大呈现的类型数量
+  baseType?: string;            // 指定基准类型（指定后此类型必定会展示）
+}
 
-  // 首先剔除y轴为非数字的脏数据 O(n)
-  source.forEach(item => {
-    if (typeof item[yKey] === 'number') {
-      data.push(item);
-    }
-  });
-
+export const autoFilterData = ({
+  data, typeKey, yKey, max = 8, baseType
+}: AutoFilterParam): string[] => {
   const typeMap = {};   // 数据分组
-  const opData = data.sort((a, b) => a[yKey] - b[yKey]);  // 分组前先排序 O(nlogn)
+  const deleteTypeMap = {}; // 被过滤掉的分组
+  const opData = data.sort((a, b) => a[yKey] - b[yKey]);  // 分组前先排序
   let res = [];   // 最终计算出的展示类型
 
-  // 将排序后的数据归纳对象分组，这样分组下的内容也为有序，方便后面取数据范围 O(n)
+  // 将排序后的数据归纳对象分组，这样分组下的内容也为有序，方便后面取数据范围
   opData.forEach(item => {
+    if (typeof item[yKey] !== 'number') {
+      return;
+    }
     if (!typeMap[item[typeKey]]) {
       typeMap[item[typeKey]] = [item];
     } else {
@@ -143,18 +148,23 @@ export const autoFilterData = (source, typeKey, yKey): string[] => {
     }
   });
 
+  // 清除无意义数据曲线
+  Object.keys(typeMap).forEach(type => {
+    const list = typeMap[type];
+
+    if (list[list.length - 1][yKey] === list[0][yKey] && type !== baseType) {
+      deleteTypeMap[type] = typeMap[type];
+      delete typeMap[type];
+    }
+  });
+
   /**
    * 以每一组区间范围当作固定区间，其他组来取交集，看是不是在这个区间
    * 最终生成类型数组，在所有结果中取类型最多的一组
-   * O(logn)
    */
-  Object.keys(typeMap).forEach(type => {
-    const list = typeMap[type]; // 检测基准标签
-
-    if (list[list.length - 1][yKey] === list[0][yKey]) {
-      return;
-    }
+  function compareData(type) {
     const temp = [type];
+    const list = typeMap[type]; // 检测基准标签
 
     Object.keys(typeMap).forEach(stype => {
       if (stype === type) {
@@ -163,6 +173,7 @@ export const autoFilterData = (source, typeKey, yKey): string[] => {
       const sList = typeMap[stype]; // 检测目标标签
 
       if (
+        temp.length < max &&
         // 目标区间最大值 比 基准区间最小值 大
         (sList[sList.length - 1][yKey] >= list[0][yKey]) &&
         // 目标区间最小值 比 基准区间最小值 小
@@ -179,7 +190,22 @@ export const autoFilterData = (source, typeKey, yKey): string[] => {
     if (temp.length > res.length) {
       res = temp;
     }
-  });
+  }
+
+  // 如果指定了基准直接找跟基准类型有相关性的数据
+  if (baseType) {
+    compareData(baseType);
+  // 否则以所有类型为基准进行尝试归纳
+  } else {
+    Object.keys(typeMap).forEach(type => {
+      compareData(type);
+    });
+  }
+
+  // 如果全部类型数据都是一条直线，那么直接都展示好了
+  if (res.length === 0) {
+    return Object.keys(deleteTypeMap);
+  }
 
   return res;
 };

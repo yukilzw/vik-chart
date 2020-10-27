@@ -1,4 +1,5 @@
 import { Data } from '@antv/g2/lib/interface';
+import { AutoFilterParam } from 'src/utils';
 
 /** 折线图配置项 */
 export interface LineProps {
@@ -30,7 +31,7 @@ export interface LineProps {
   /** 是否生成平滑曲线 */
   smooth?: boolean;
   /** 图例位置 */
-  legendPos?: 'top' | 'bottom' | 'right'
+  legendPos?: 'top' | 'bottom' | 'right';
   /** 智能筛选展示数据 */
-  auto?: boolean
+  auto?: boolean | AutoFilterParam;
 }

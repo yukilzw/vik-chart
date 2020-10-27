@@ -103,7 +103,12 @@ const Line: React.FC<LineProps> = forwardRef(({
     });
 
     if (auto) {
-      const ftype: string[] = autoFilterData(data, typeKey, yKey);
+      const param = { data, typeKey, yKey };
+
+      if (typeof auto === 'object') {
+        Object.assign(param, auto);
+      }
+      const ftype: string[] = autoFilterData(param);
 
       chart.filter('type', (value) => ftype.indexOf(value) !== -1);
     }

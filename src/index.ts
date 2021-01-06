@@ -11,3 +11,5 @@ export { default as Pie } from './Pie';
 export { default as Area } from './Area';
 
 export { default as Bubble } from './Bubble';
+
+export { default as LineReq } from './LineReq';

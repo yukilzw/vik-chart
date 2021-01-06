@@ -114,6 +114,9 @@ const UVwave: React.FC<ColumnProps> = forwardRef((props, ref) => {
         formatter: yFormat,
         alias: '环比人群占比率'
       },
+      distanceFormat: {
+        alias: '绝对值增长'
+      },
       [typeKey]: {
         formatter: typeFormat,
       },
@@ -225,7 +228,7 @@ const UVwave: React.FC<ColumnProps> = forwardRef((props, ref) => {
 
     const g: Geometry = chart
       .interval()
-      .tooltip(yKey === 'distance' ? 'ds*sub1d*distance' : 'yesterdayRate*todayRate*diffRate')
+      .tooltip(yKey === 'distance' ? 'ds*sub1d*distance' : 'yesterdayRate*todayRate*diffRate*distanceFormat')
       .position(`${xKey}*${yKey}`)
       .color(yKey, (dis) => {
         if (dis > 0) {

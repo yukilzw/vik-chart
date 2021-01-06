@@ -1,5 +1,5 @@
 /**
- * @fileOverview 可变坐标折线点混合图
+ * @fileOverview 需求指标图
  * @author zhanwei.lzw@alibaba-inc.com
  */
 import React, { useEffect, forwardRef, useRef, useImperativeHandle } from 'react';
@@ -43,6 +43,8 @@ const extraX = {
   },
 };
 
+const redColor = 'rgb(247, 228, 0)';
+
 const Line: React.FC<LineProps> = forwardRef(({
   data,
   typeKey,
@@ -53,18 +55,18 @@ const Line: React.FC<LineProps> = forwardRef(({
   xFormat,
   yFormat,
   typeFormat,
-  point = true,
   line = true,
   smooth = true,
   padding,
   legendPos,
-  onClickItem,
+  pubDate,
   auto
 }, ref) => {
   const chartRef = useRef<Chart>();
   const canvasBoxRef = useRef<HTMLDivElement>();
   const shouldClear = useRef<boolean>(false);
   const filterData = useRef<Data>([]);
+  const annoPosKeyPre = useRef<string>();
 
   const updateSetting = () => {
     const chart =  chartRef.current;
@@ -102,6 +104,68 @@ const Line: React.FC<LineProps> = forwardRef(({
       ...extraX
     });
 
+    let annoPosKey;
+
+    data.some((item, i) => {
+      if (item[xKey] === pubDate) {
+        annoPosKey = i - 0.5;
+        return true;
+      }
+      return false;
+    });
+
+    if (annoPosKey !== annoPosKeyPre.current) {
+      chart.annotation().clear(true);
+    }
+    annoPosKeyPre.current = annoPosKey;
+    if (annoPosKey) {
+      // console.log(annoPosKey);
+      // chart.annotation().line({
+      //   start: [annoPosKey, 'min'],
+      //   end: [annoPosKey, 0],
+      //   style: {
+      //     stroke: redColor,
+      //     lineWidth: 1,
+      //     lineDash: [4, 3]
+      //   },
+      //   text: {
+      //     position: 'start',
+      //     style: {
+      //       fill: redColor,
+      //       fontSize: 15,
+      //       fontWeight: 'normal'
+      //     },
+      //     content: '发布日 😈',
+      //     offsetY: 22,
+      //     offsetX: 5
+      //   },
+      // });
+
+      chart.annotation().line({
+        start: [3, 'min'],
+        end: [3, 'max'],
+        style: {
+          stroke: redColor,
+          lineWidth: 1,
+          lineDash: [4, 3]
+        },
+        text: {
+          autoRotate: false,
+          position: 'end',
+          style: {
+            shadowColor: '#333',
+            shadowBlur: 3,
+            fill: redColor,
+            fontSize: 15,
+            fontWeight: 'bold'
+          },
+          content: '发布日 🐝',
+          offsetY: 0,
+          offsetX: -26
+        },
+      });
+    }
+
     if (auto) {
       const param = { data, typeKey, yKey };
 
@@ -137,7 +201,7 @@ const Line: React.FC<LineProps> = forwardRef(({
       showCrosshairs: true,
       shared: true,
       crosshairs: {
-        type: !line ? 'xy' : 'x',
+        type: 'x',
       },
     });
 
@@ -160,47 +224,8 @@ const Line: React.FC<LineProps> = forwardRef(({
       }
     }
 
-    if (point) {
-      const g2: Geometry = chart
-        .point()
-        .position(`${xKey}*${yKey}`)
-        .shape('circle');
-
-      if (typeKey) {
-        g2.color(typeKey);
-      }
-    }
-
     chart.render();
-
-    if (onClickItem && firstRender && point) {
-      view.on('point:mousedown', (ev) => {
-        const element = ev.target.get('element');
-        const data = element.getModel().data;
-
-        onClickItem(data, true);
-      });
-
-      view.on('point:mouseover', (ev) => {
-        view.getCanvas().setCursor('pointer');
-      });
-
-      view.on('point:mouseout', (ev) => {
-        view.getCanvas().setCursor('default');
-      });
-    }
   };
-
-  useEffect(() => {
-    const nData = data;
-
-    nData.forEach((item) => {
-      if (item[yKey] < 0.0001) {
-        item[yKey] = 0;
-      }
-    });
-    filterData.current = nData;
-  }, [data]);
 
   useEffect(() => {
     shouldClear.current = true;
@@ -218,7 +243,18 @@ const Line: React.FC<LineProps> = forwardRef(({
         shouldClear.current = false;
       }
     }
-  }, [xKey, yKey, xTitle, yTitle, yFormat, xFormat, typeFormat, typeKey, data]);
+  }, [xKey, yKey, xTitle, yTitle, typeKey, data, pubDate]);
+
+  useEffect(() => {
+    const nData = data;
+
+    nData.forEach((item) => {
+      if (item[yKey] < 0.0001) {
+        item[yKey] = 0;
+      }
+    });
+    filterData.current = nData;
+  }, [data]);
 
   useImperativeHandle(ref, () => ({
     fitView: () => {

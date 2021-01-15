@@ -26,9 +26,8 @@ const extraY = {
   grid: {
     line: {
       style: {
-        lineWidth: 0.8,
-        lineDash: [5],
-        stroke: '#bfbfbf'
+        lineWidth: 0.6,
+        stroke: '#dcdcdc'
       }
     }
   },
@@ -43,7 +42,7 @@ const extraX = {
   },
 };
 
-const redColor = 'rgb(247, 228, 0)';
+const redColor = '#f44336';
 
 const Line: React.FC<LineProps> = forwardRef(({
   data,
@@ -106,9 +105,13 @@ const Line: React.FC<LineProps> = forwardRef(({
 
     let annoPosKey;
 
-    data.some((item, i) => {
+    const res = new Map();
+    const d = data.filter((item) => !res.has(item.x) && res.set(item.x, 1));
+
+    d.sort((a, b) => new Date(a.x).getTime() - new Date(b.x).getTime());
+    d.some((item, i) => {
       if (item[xKey] === pubDate) {
-        annoPosKey = i - 0.5;
+        annoPosKey = i;
         return true;
       }
       return false;
@@ -118,42 +121,21 @@ const Line: React.FC<LineProps> = forwardRef(({
       chart.annotation().clear(true);
     }
     annoPosKeyPre.current = annoPosKey;
-    if (annoPosKey) {
-      // console.log(annoPosKey);
-      // chart.annotation().line({
-      //   start: [annoPosKey, 'min'],
-      //   end: [annoPosKey, 0],
-      //   style: {
-      //     stroke: redColor,
-      //     lineWidth: 1,
-      //     lineDash: [4, 3]
-      //   },
-      //   text: {
-      //     position: 'start',
-      //     style: {
-      //       fill: redColor,
-      //       fontSize: 15,
-      //       fontWeight: 'normal'
-      //     },
-      //     content: '发布日 😈',
-      //     offsetY: 22,
-      //     offsetX: 5
-      //   },
-      // });
 
+    if (annoPosKey) {
       chart.annotation().line({
-        start: [3, 'min'],
-        end: [3, 'max'],
+        start: [annoPosKey, 'min'],
+        end: [annoPosKey, 'max'],
         style: {
           stroke: redColor,
-          lineWidth: 1,
-          lineDash: [4, 3]
+          lineWidth: 1.5,
+          lineDash: [3, 2]
         },
         text: {
           autoRotate: false,
           position: 'end',
           style: {
-            shadowColor: '#333',
+            shadowColor: 'rgb(247, 228, 0)',
             shadowBlur: 3,
             fill: redColor,
             fontSize: 15,
